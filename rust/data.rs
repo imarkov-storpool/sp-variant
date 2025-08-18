@@ -38,8 +38,10 @@ pub enum VariantKind {
     DEBIAN11,
     /// Debian 12.x (bookworm)
     DEBIAN12,
-    /// Debian 13.x (trixie/unstable)
+    /// Debian 13.x (trixie)
     DEBIAN13,
+    /// Debian 14.x (forky/unstable)
+    DEBIAN14,
     /// Oracle Linux 7.x
     ORACLE7,
     /// Oracle Linux 8.x
@@ -72,6 +74,7 @@ impl VariantKind {
     const DEBIAN11_NAME: &'static str = "DEBIAN11";
     const DEBIAN12_NAME: &'static str = "DEBIAN12";
     const DEBIAN13_NAME: &'static str = "DEBIAN13";
+    const DEBIAN14_NAME: &'static str = "DEBIAN14";
     const ORACLE7_NAME: &'static str = "ORACLE7";
     const ORACLE8_NAME: &'static str = "ORACLE8";
     const ORACLE9_NAME: &'static str = "ORACLE9";
@@ -97,6 +100,7 @@ impl AsRef<str> for VariantKind {
             Self::DEBIAN11 => Self::DEBIAN11_NAME,
             Self::DEBIAN12 => Self::DEBIAN12_NAME,
             Self::DEBIAN13 => Self::DEBIAN13_NAME,
+            Self::DEBIAN14 => Self::DEBIAN14_NAME,
             Self::ORACLE7 => Self::ORACLE7_NAME,
             Self::ORACLE8 => Self::ORACLE8_NAME,
             Self::ORACLE9 => Self::ORACLE9_NAME,
@@ -126,6 +130,7 @@ impl FromStr for VariantKind {
             Self::DEBIAN11_NAME => Ok(Self::DEBIAN11),
             Self::DEBIAN12_NAME => Ok(Self::DEBIAN12),
             Self::DEBIAN13_NAME => Ok(Self::DEBIAN13),
+            Self::DEBIAN14_NAME => Ok(Self::DEBIAN14),
             Self::ORACLE7_NAME => Ok(Self::ORACLE7),
             Self::ORACLE8_NAME => Ok(Self::ORACLE8),
             Self::ORACLE9_NAME => Ok(Self::ORACLE9),
@@ -159,9 +164,9 @@ pub fn get_variants() -> &'static VariantDefTop {
                     VariantKind::ROCKY8,
                     VariantKind::ROCKY9,
                     VariantKind::RHEL8,
+                    VariantKind::ORACLE9,
                     VariantKind::ORACLE8,
                     VariantKind::ORACLE7,
-                    VariantKind::ORACLE9,
                     VariantKind::CENTOS7,
                     VariantKind::CENTOS8,
                     VariantKind::CENTOS9,
@@ -175,6 +180,7 @@ pub fn get_variants() -> &'static VariantDefTop {
                     VariantKind::DEBIAN11,
                     VariantKind::DEBIAN12,
                     VariantKind::DEBIAN13,
+                    VariantKind::DEBIAN14,
             ],
             variants: HashMap::from(
                 [
@@ -1451,9 +1457,9 @@ fi
                             VariantKind::DEBIAN13,
                             Variant {
                                 kind: VariantKind::DEBIAN13,
-                                descr: "Debian 13.x (trixie/unstable)".to_owned(),
+                                descr: "Debian 13.x (trixie)".to_owned(),
                                 family: "debian".to_owned(),
-                                parent: "".to_owned(),
+                                parent: "DEBIAN14".to_owned(),
                                 detect: Detect {
                                     filename: "/etc/os-release".to_owned(),
                                     #[allow(clippy::needless_raw_strings)]
@@ -1465,6 +1471,162 @@ fi
                                     os_id: "debian".to_owned(),
                                     #[allow(clippy::needless_raw_strings)]
                                     os_version_regex: r"^13$".to_owned(),
+                                },
+                                supported: Supported {
+                                    repo: true,
+                                },
+                                commands: HashMap::from(
+                                    [
+                                        (
+                                            "package".to_owned(),
+                                            HashMap::from(
+                                                [
+                                                    (
+                                                        "install".to_owned(),
+                                                        vec![
+                                                            "env".to_owned(),
+                                                            "DEBIAN_FRONTEND=noninteractive".to_owned(),
+                                                            "apt-get".to_owned(),
+                                                            "-q".to_owned(),
+                                                            "-y".to_owned(),
+                                                            "--no-install-recommends".to_owned(),
+                                                            "install".to_owned(),
+                                                            "--".to_owned(),
+                                                        ],
+                                                    ),
+                                                    (
+                                                        "list_all".to_owned(),
+                                                        vec![
+                                                            "dpkg-query".to_owned(),
+                                                            "-W".to_owned(),
+                                                            "-f".to_owned(),
+                                                            "${Package}\\t${Version}\\t${Architecture}\\t${db:Status-Abbrev}\\n".to_owned(),
+                                                            "--".to_owned(),
+                                                        ],
+                                                    ),
+                                                    (
+                                                        "purge".to_owned(),
+                                                        vec![
+                                                            "env".to_owned(),
+                                                            "DEBIAN_FRONTEND=noninteractive".to_owned(),
+                                                            "apt-get".to_owned(),
+                                                            "-q".to_owned(),
+                                                            "-y".to_owned(),
+                                                            "purge".to_owned(),
+                                                            "--".to_owned(),
+                                                        ],
+                                                    ),
+                                                    (
+                                                        "remove".to_owned(),
+                                                        vec![
+                                                            "env".to_owned(),
+                                                            "DEBIAN_FRONTEND=noninteractive".to_owned(),
+                                                            "apt-get".to_owned(),
+                                                            "-q".to_owned(),
+                                                            "-y".to_owned(),
+                                                            "remove".to_owned(),
+                                                            "--".to_owned(),
+                                                        ],
+                                                    ),
+                                                    (
+                                                        "remove_impl".to_owned(),
+                                                        vec![
+                                                            "env".to_owned(),
+                                                            "DEBIAN_FRONTEND=noninteractive".to_owned(),
+                                                            "dpkg".to_owned(),
+                                                            "-r".to_owned(),
+                                                            "--".to_owned(),
+                                                        ],
+                                                    ),
+                                                    (
+                                                        "update_db".to_owned(),
+                                                        vec![
+                                                            "apt-get".to_owned(),
+                                                            "-q".to_owned(),
+                                                            "-y".to_owned(),
+                                                            "update".to_owned(),
+                                                        ],
+                                                    ),
+                                                ]
+                                            ),
+                                        ),
+                                        (
+                                            "pkgfile".to_owned(),
+                                            HashMap::from(
+                                                [
+                                                    (
+                                                        "dep_query".to_owned(),
+                                                        vec![
+                                                            "sh".to_owned(),
+                                                            "-c".to_owned(),
+                                                            "dpkg-deb -f -- \"$pkg\" \"Depends\" | sed -e \"s/ *, */,/g\" | tr \",\" \"\\n\"".to_owned(),
+                                                        ],
+                                                    ),
+                                                    (
+                                                        "install".to_owned(),
+                                                        vec![
+                                                            "sh".to_owned(),
+                                                            "-c".to_owned(),
+                                                            "env DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --reinstall -y -o DPkg::Options::=--force-confnew -- $packages".to_owned(),
+                                                        ],
+                                                    ),
+                                                ]
+                                            ),
+                                        ),
+                                    ]
+                                ),
+                                min_sys_python: "3.11".to_owned(),
+                                repo:
+                                    Repo::Deb(DebRepo {
+                                        codename: "trixie".to_owned(),
+                                        vendor: "debian".to_owned(),
+                                        sources: "debian/repo/storpool.sources".to_owned(),
+                                        keyring: "debian/repo/storpool-keyring.gpg".to_owned(),
+                                        req_packages: vec![
+                                            "ca-certificates".to_owned(),
+                                        ],
+                                    }),
+                                    package: HashMap::from(
+                                    [
+                                        ("BINDINGS_PYTHON".to_owned(), "python3".to_owned()),
+                                        ("BINDINGS_PYTHON_CONFGET".to_owned(), "python3-confget".to_owned()),
+                                        ("BINDINGS_PYTHON_SIMPLEJSON".to_owned(), "python3-simplejson".to_owned()),
+                                        ("CGROUP".to_owned(), "cgroup-tools".to_owned()),
+                                        ("CPUPOWER".to_owned(), "linux-cpupower".to_owned()),
+                                        ("LIBSSL".to_owned(), "libssl3".to_owned()),
+                                        ("MCELOG".to_owned(), "bash".to_owned()),
+                                    ]
+                                ),
+                                systemd_lib: "lib/systemd/system".to_owned(),
+                                file_ext: "deb".to_owned(),
+                                initramfs_flavor: "update-initramfs".to_owned(),
+                                builder: Builder {
+                                    alias: "debian13".to_owned(),
+                                    base_image: "debian:trixie".to_owned(),
+                                    branch: "debian/trixie".to_owned(),
+                                    kernel_package: "linux-headers".to_owned(),
+                                    utf8_locale: "C.UTF-8".to_owned(),
+                                },
+                            },
+                    ),
+                    (
+                            VariantKind::DEBIAN14,
+                            Variant {
+                                kind: VariantKind::DEBIAN14,
+                                descr: "Debian 14.x (forky/unstable)".to_owned(),
+                                family: "debian".to_owned(),
+                                parent: "".to_owned(),
+                                detect: Detect {
+                                    filename: "/etc/os-release".to_owned(),
+                                    #[allow(clippy::needless_raw_strings)]
+                                    regex: r"^
+                    PRETTY_NAME= .*
+                    Debian \s+ GNU/Linux \s+
+                    (?: forky | 14 ) (?: \s | / )
+                ".to_owned(),
+                                    os_id: "debian".to_owned(),
+                                    #[allow(clippy::needless_raw_strings)]
+                                    os_version_regex: r"^14$".to_owned(),
                                 },
                                 supported: Supported {
                                     repo: false,
@@ -1595,7 +1757,7 @@ fi
                                 file_ext: "deb".to_owned(),
                                 initramfs_flavor: "update-initramfs".to_owned(),
                                 builder: Builder {
-                                    alias: "debian13".to_owned(),
+                                    alias: "debian14".to_owned(),
                                     base_image: "debian:unstable".to_owned(),
                                     branch: "debian/unstable".to_owned(),
                                     kernel_package: "linux-headers".to_owned(),
@@ -1875,10 +2037,10 @@ for f in $packages; do
 done
 
 if [ -n \"$to_install\" ]; then
-    dnf install -y --disablerepo='*' --enablerepo=ol8_appstream,ol8_codeready_builder,ol8_baseos_latest,storpool-contrib --setopt=localpkg_gpgcheck=0 -- $to_install
+    dnf install -y --disablerepo='*' --enablerepo=ol8_appstream,ol8_baseos_latest,ol8_codeready_builder,storpool-contrib --setopt=localpkg_gpgcheck=0 -- $to_install
 fi
 if [ -n \"$to_reinstall\" ]; then
-    dnf reinstall -y --disablerepo='*' --enablerepo=ol8_appstream,ol8_codeready_builder,ol8_baseos_latest,storpool-contrib --setopt=localpkg_gpgcheck=0 -- $to_reinstall
+    dnf reinstall -y --disablerepo='*' --enablerepo=ol8_appstream,ol8_baseos_latest,ol8_codeready_builder,storpool-contrib --setopt=localpkg_gpgcheck=0 -- $to_reinstall
 fi
 ".to_owned(),
                                                         ],
@@ -1922,109 +2084,109 @@ fi
                             },
                     ),
                     (
-                        VariantKind::ORACLE9,
-                        Variant {
-                            kind: VariantKind::ORACLE9,
-                            descr: "Oracle Linux 9.x".to_owned(),
-                            family: "redhat".to_owned(),
-                            parent: "".to_owned(),
-                            detect: Detect {
-                                filename: "/etc/oracle-release".to_owned(),
-                                #[allow(clippy::needless_raw_strings)]
-                                regex: r"^ Oracle \s+ Linux \s+ Server \s+ release \s .* \s 9 \. (?: [4-9] | [1-9][0-9] )".to_owned(),
-                                os_id: "ol".to_owned(),
-                                #[allow(clippy::needless_raw_strings)]
-                                os_version_regex: r"^9(?:$|\.[0-9])".to_owned(),
-                            },
-                            supported: Supported {
-                                repo: false,
-                            },
-                            commands: HashMap::from(
-                                [
-                                    (
-                                        "package".to_owned(),
-                                        HashMap::from(
-                                            [
-                                                (
-                                                    "install".to_owned(),
-                                                    vec![
-                                                        "dnf".to_owned(),
-                                                        "--disablerepo=*".to_owned(),
-                                                        "--enablerepo=ol9_appstream".to_owned(),
-                                                        "--enablerepo=ol9_baseos_latest".to_owned(),
-                                                        "--enablerepo=ol9_codeready_builder".to_owned(),
-                                                        "--enablerepo=storpool-contrib".to_owned(),
+                            VariantKind::ORACLE9,
+                            Variant {
+                                kind: VariantKind::ORACLE9,
+                                descr: "Oracle Linux 9.x".to_owned(),
+                                family: "redhat".to_owned(),
+                                parent: "".to_owned(),
+                                detect: Detect {
+                                    filename: "/etc/oracle-release".to_owned(),
+                                    #[allow(clippy::needless_raw_strings)]
+                                    regex: r"^ Oracle \s+ Linux \s+ Server \s+ release \s .* \s 9 \. (?: [4-9] | [1-9][0-9] )".to_owned(),
+                                    os_id: "ol".to_owned(),
+                                    #[allow(clippy::needless_raw_strings)]
+                                    os_version_regex: r"^9(?:$|\.[0-9])".to_owned(),
+                                },
+                                supported: Supported {
+                                    repo: false,
+                                },
+                                commands: HashMap::from(
+                                    [
+                                        (
+                                            "package".to_owned(),
+                                            HashMap::from(
+                                                [
+                                                    (
                                                         "install".to_owned(),
-                                                        "-q".to_owned(),
-                                                        "-y".to_owned(),
-                                                        "--".to_owned(),
-                                                    ],
-                                                ),
-                                                (
-                                                    "list_all".to_owned(),
-                                                    vec![
-                                                        "rpm".to_owned(),
-                                                        "-qa".to_owned(),
-                                                        "--qf".to_owned(),
-                                                        "%{Name}\\t%{EVR}\\t%{Arch}\\tii\\n".to_owned(),
-                                                        "--".to_owned(),
-                                                    ],
-                                                ),
-                                                (
-                                                    "purge".to_owned(),
-                                                    vec![
-                                                        "yum".to_owned(),
+                                                        vec![
+                                                            "dnf".to_owned(),
+                                                            "--disablerepo=*".to_owned(),
+                                                            "--enablerepo=ol9_appstream".to_owned(),
+                                                            "--enablerepo=ol9_baseos_latest".to_owned(),
+                                                            "--enablerepo=ol9_codeready_builder".to_owned(),
+                                                            "--enablerepo=storpool-contrib".to_owned(),
+                                                            "install".to_owned(),
+                                                            "-q".to_owned(),
+                                                            "-y".to_owned(),
+                                                            "--".to_owned(),
+                                                        ],
+                                                    ),
+                                                    (
+                                                        "list_all".to_owned(),
+                                                        vec![
+                                                            "rpm".to_owned(),
+                                                            "-qa".to_owned(),
+                                                            "--qf".to_owned(),
+                                                            "%{Name}\\t%{EVR}\\t%{Arch}\\tii\\n".to_owned(),
+                                                            "--".to_owned(),
+                                                        ],
+                                                    ),
+                                                    (
+                                                        "purge".to_owned(),
+                                                        vec![
+                                                            "yum".to_owned(),
+                                                            "remove".to_owned(),
+                                                            "-q".to_owned(),
+                                                            "-y".to_owned(),
+                                                            "--".to_owned(),
+                                                        ],
+                                                    ),
+                                                    (
                                                         "remove".to_owned(),
-                                                        "-q".to_owned(),
-                                                        "-y".to_owned(),
-                                                        "--".to_owned(),
-                                                    ],
-                                                ),
-                                                (
-                                                    "remove".to_owned(),
-                                                    vec![
-                                                        "yum".to_owned(),
-                                                        "remove".to_owned(),
-                                                        "-q".to_owned(),
-                                                        "-y".to_owned(),
-                                                        "--".to_owned(),
-                                                    ],
-                                                ),
-                                                (
-                                                    "remove_impl".to_owned(),
-                                                    vec![
-                                                        "rpm".to_owned(),
-                                                        "-e".to_owned(),
-                                                        "--".to_owned(),
-                                                    ],
-                                                ),
-                                                (
-                                                    "update_db".to_owned(),
-                                                    vec![
-                                                        "true".to_owned(),
-                                                    ],
-                                                ),
-                                            ]
+                                                        vec![
+                                                            "yum".to_owned(),
+                                                            "remove".to_owned(),
+                                                            "-q".to_owned(),
+                                                            "-y".to_owned(),
+                                                            "--".to_owned(),
+                                                        ],
+                                                    ),
+                                                    (
+                                                        "remove_impl".to_owned(),
+                                                        vec![
+                                                            "rpm".to_owned(),
+                                                            "-e".to_owned(),
+                                                            "--".to_owned(),
+                                                        ],
+                                                    ),
+                                                    (
+                                                        "update_db".to_owned(),
+                                                        vec![
+                                                            "true".to_owned(),
+                                                        ],
+                                                    ),
+                                                ]
+                                            ),
                                         ),
-                                    ),
-                                    (
-                                        "pkgfile".to_owned(),
-                                        HashMap::from(
-                                            [
-                                                (
-                                                    "dep_query".to_owned(),
-                                                    vec![
-                                                        "sh".to_owned(),
-                                                        "-c".to_owned(),
-                                                        "rpm -qpR -- \"$pkg\"".to_owned(),
-                                                    ],
-                                                ),
-                                                (
-                                                    "install".to_owned(),
-                                                    vec![
-                                                        "sh".to_owned(),
-                                                        "-c".to_owned(),
-                                                        "
+                                        (
+                                            "pkgfile".to_owned(),
+                                            HashMap::from(
+                                                [
+                                                    (
+                                                        "dep_query".to_owned(),
+                                                        vec![
+                                                            "sh".to_owned(),
+                                                            "-c".to_owned(),
+                                                            "rpm -qpR -- \"$pkg\"".to_owned(),
+                                                        ],
+                                                    ),
+                                                    (
+                                                        "install".to_owned(),
+                                                        vec![
+                                                            "sh".to_owned(),
+                                                            "-c".to_owned(),
+                                                            "
 unset to_install to_reinstall
 for f in $packages; do
     package=\"$(rpm -qp \"$f\")\"
@@ -2036,51 +2198,51 @@ for f in $packages; do
 done
 
 if [ -n \"$to_install\" ]; then
-    dnf install -y --disablerepo='*' --enablerepo=ol9_appstream,ol9_codeready_builder,ol9_baseos_latest,storpool-contrib --setopt=localpkg_gpgcheck=0 -- $to_install
+    dnf install -y --disablerepo='*' --enablerepo=ol9_appstream,ol9_baseos_latest,ol9_codeready_builder,storpool-contrib --setopt=localpkg_gpgcheck=0 -- $to_install
 fi
 if [ -n \"$to_reinstall\" ]; then
-    dnf reinstall -y --disablerepo='*' --enablerepo=ol9_appstream,ol9_codeready_builder,ol9_baseos_latest,storpool-contrib --setopt=localpkg_gpgcheck=0 -- $to_reinstall
+    dnf reinstall -y --disablerepo='*' --enablerepo=ol9_appstream,ol9_baseos_latest,ol9_codeready_builder,storpool-contrib --setopt=localpkg_gpgcheck=0 -- $to_reinstall
 fi
 ".to_owned(),
-                                                    ],
-                                                ),
-                                            ]
+                                                        ],
+                                                    ),
+                                                ]
+                                            ),
                                         ),
-                                    ),
-                                ]
-                            ),
-                            min_sys_python: "3.9".to_owned(),
-                            repo:
-                            Repo::Yum(YumRepo {
-                                yumdef: "redhat/repo/storpool-centos.repo".to_owned(),
-                                keyring: "redhat/repo/RPM-GPG-KEY-StorPool".to_owned(),
-                            }),
-                            package: HashMap::from(
-                                [
-                                    ("KMOD".to_owned(), "kmod".to_owned()),
-                                    ("LIBCGROUP".to_owned(), "bash".to_owned()),
-                                    ("LIBUDEV".to_owned(), "systemd-libs".to_owned()),
-                                    ("OPENSSL".to_owned(), "openssl-libs".to_owned()),
-                                    ("PERL_AUTODIE".to_owned(), "perl-autodie".to_owned()),
-                                    ("PERL_FILE_PATH".to_owned(), "perl-File-Path".to_owned()),
-                                    ("PERL_LWP_PROTO_HTTPS".to_owned(), "perl-LWP-Protocol-https".to_owned()),
-                                    ("PERL_SYS_SYSLOG".to_owned(), "perl-Sys-Syslog".to_owned()),
-                                    ("PROCPS".to_owned(), "procps-ng".to_owned()),
-                                    ("PYTHON_SIMPLEJSON".to_owned(), "bash".to_owned()),
-                                    ("UDEV".to_owned(), "systemd".to_owned()),
-                                ]
-                            ),
-                            systemd_lib: "usr/lib/systemd/system".to_owned(),
-                            file_ext: "rpm".to_owned(),
-                            initramfs_flavor: "mkinitrd".to_owned(),
-                            builder: Builder {
-                                alias: "oracle9".to_owned(),
-                                base_image: "oraclelinux:9".to_owned(),
-                                branch: "".to_owned(),
-                                kernel_package: "kernel-core".to_owned(),
-                                utf8_locale: "C.UTF-8".to_owned(),
+                                    ]
+                                ),
+                                min_sys_python: "3.9".to_owned(),
+                                repo:
+                                    Repo::Yum(YumRepo {
+                                        yumdef: "redhat/repo/storpool-centos.repo".to_owned(),
+                                        keyring: "redhat/repo/RPM-GPG-KEY-StorPool".to_owned(),
+                                    }),
+                                    package: HashMap::from(
+                                    [
+                                        ("KMOD".to_owned(), "kmod".to_owned()),
+                                        ("LIBCGROUP".to_owned(), "bash".to_owned()),
+                                        ("LIBUDEV".to_owned(), "systemd-libs".to_owned()),
+                                        ("OPENSSL".to_owned(), "openssl-libs".to_owned()),
+                                        ("PERL_AUTODIE".to_owned(), "perl-autodie".to_owned()),
+                                        ("PERL_FILE_PATH".to_owned(), "perl-File-Path".to_owned()),
+                                        ("PERL_LWP_PROTO_HTTPS".to_owned(), "perl-LWP-Protocol-https".to_owned()),
+                                        ("PERL_SYS_SYSLOG".to_owned(), "perl-Sys-Syslog".to_owned()),
+                                        ("PROCPS".to_owned(), "procps-ng".to_owned()),
+                                        ("PYTHON_SIMPLEJSON".to_owned(), "bash".to_owned()),
+                                        ("UDEV".to_owned(), "systemd".to_owned()),
+                                    ]
+                                ),
+                                systemd_lib: "usr/lib/systemd/system".to_owned(),
+                                file_ext: "rpm".to_owned(),
+                                initramfs_flavor: "mkinitrd".to_owned(),
+                                builder: Builder {
+                                    alias: "oracle9".to_owned(),
+                                    base_image: "oraclelinux:9".to_owned(),
+                                    branch: "".to_owned(),
+                                    kernel_package: "kernel-core".to_owned(),
+                                    utf8_locale: "C.UTF-8".to_owned(),
+                                },
                             },
-                        },
                     ),
                     (
                             VariantKind::RHEL8,
@@ -3175,7 +3337,7 @@ fi
                     ),
                 ]
             ),
-            version: "3.5.4".to_owned(),
+            version: "3.5.5".to_owned(),
         }
     });
     assert!(

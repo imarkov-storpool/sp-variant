@@ -21,8 +21,8 @@ CMD_NOOP: Final[list[str]] = ["true"]
 
 _VARIANT_DEF: Final[list[defs.Variant | defs.VariantUpdate]] = [
     defs.Variant(
-        name="DEBIAN13",
-        descr="Debian 13.x (trixie/unstable)",
+        name="DEBIAN14",
+        descr="Debian 14.x (forky/unstable)",
         parent="",
         family="debian",
         detect=defs.Detect(
@@ -31,12 +31,12 @@ _VARIANT_DEF: Final[list[defs.Variant | defs.VariantUpdate]] = [
                 r"""^
                     PRETTY_NAME= .*
                     Debian \s+ GNU/Linux \s+
-                    (?: trixie | 13 ) (?: \s | / )
+                    (?: forky | 14 ) (?: \s | / )
                 """,
                 re.X,
             ),
             os_id="debian",
-            os_version_regex=re.compile(r"^13$"),
+            os_version_regex=re.compile(r"^14$"),
         ),
         supported=defs.Supported(repo=False),
         commands=defs.Commands(
@@ -122,12 +122,39 @@ _VARIANT_DEF: Final[list[defs.Variant | defs.VariantUpdate]] = [
         file_ext="deb",
         initramfs_flavor="update-initramfs",
         builder=defs.Builder(
-            alias="debian13",
+            alias="debian14",
             base_image="debian:unstable",
             branch="debian/unstable",
             kernel_package="linux-headers",
             utf8_locale="C.UTF-8",
         ),
+    ),
+    defs.VariantUpdate(
+        name="DEBIAN13",
+        descr="Debian 13.x (trixie)",
+        parent="DEBIAN14",
+        detect=defs.Detect(
+            filename="/etc/os-release",
+            regex=re.compile(
+                r"""^
+                    PRETTY_NAME= .*
+                    Debian \s+ GNU/Linux \s+
+                    (?: trixie | 13 ) (?: \s | / )
+                """,
+                re.X,
+            ),
+            os_id="debian",
+            os_version_regex=re.compile(r"^13$"),
+        ),
+        updates={
+            "supported": {"repo": True},
+            "repo": {"codename": "trixie"},
+            "builder": {
+                "alias": "debian13",
+                "base_image": "debian:trixie",
+                "branch": "debian/trixie",
+            },
+        },
     ),
     defs.VariantUpdate(
         name="DEBIAN12",
