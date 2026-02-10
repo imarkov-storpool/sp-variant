@@ -72,16 +72,6 @@ detect_from_os_release()
 		printf -- '%s\n' 'DEBIAN12'
 		return
 	fi
-
-	if [ "$os_id" = 'linuxmint' ] && printf -- '%s\n' "$version_id" | grep -Eqe '^6$'; then
-		printf -- '%s\n' 'DEBIAN12'
-		return
-	fi
-
-	if [ "$os_id" = 'linuxmint' ] && printf -- '%s\n' "$version_id" | grep -Eqe '^7$'; then
-		printf -- '%s\n' 'DEBIAN13'
-		return
-	fi
 	
 	if [ "$os_id" = 'debian' ] && printf -- '%s\n' "$version_id" | grep -Eqe '^13$'; then
 		printf -- '%s\n' 'DEBIAN13'
@@ -251,7 +241,7 @@ cmd_detect()
 		return
 	fi
 	
-	if [ -r '/etc/os-release' ] && grep -Eqe '^PRETTY_NAME=.*Debian[[:space:]]+GNU/Linux[[:space:]]+(trixie|13)([[:space:]]|/)' -- '/etc/os-release'; then
+	if [ -r '/etc/os-release' ] && grep -Eqe '^PRETTY_NAME=.*(Debian[[:space:]]+GNU/Linux[[:space:]]+(trixie|13)([[:space:]]|/)|LMDE[[:space:]]+7)' -- '/etc/os-release'; then
 		printf -- '%s\n' 'DEBIAN13'
 		return
 	fi
@@ -1215,7 +1205,7 @@ show_DEBIAN13()
     "filename": "/etc/os-release",
     "os_id": "debian",
     "os_version_regex": "^13$",
-    "regex": "^\n                    PRETTY_NAME= .*\n                    Debian \\s+ GNU/Linux \\s+\n                    (?: trixie | 13 ) (?: \\s | / )\n                "
+    "regex": "^\n                    PRETTY_NAME= .*\n                    (Debian \\s+ GNU/Linux \\s+\n                    (?: trixie | 13 ) (?: \\s | / ) |\n                    LMDE\\s+7\n                    )\n                "
   },
   "family": "debian",
   "file_ext": "deb",

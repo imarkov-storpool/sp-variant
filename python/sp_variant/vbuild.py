@@ -138,8 +138,10 @@ _VARIANT_DEF: Final[list[defs.Variant | defs.VariantUpdate]] = [
             regex=re.compile(
                 r"""^
                     PRETTY_NAME= .*
-                    Debian \s+ GNU/Linux \s+
-                    (?: trixie | 13 ) (?: \s | / )
+                    (Debian \s+ GNU/Linux \s+
+                    (?: trixie | 13 ) (?: \s | / ) |
+                    LMDE\s+7
+                    )
                 """,
                 re.X,
             ),

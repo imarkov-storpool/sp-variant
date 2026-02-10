@@ -1465,8 +1465,10 @@ fi
                                     #[allow(clippy::needless_raw_strings)]
                                     regex: r"^
                     PRETTY_NAME= .*
-                    Debian \s+ GNU/Linux \s+
-                    (?: trixie | 13 ) (?: \s | / )
+                    (Debian \s+ GNU/Linux \s+
+                    (?: trixie | 13 ) (?: \s | / ) |
+                    LMDE\s+7
+                    )
                 ".to_owned(),
                                     os_id: "debian".to_owned(),
                                     #[allow(clippy::needless_raw_strings)]
