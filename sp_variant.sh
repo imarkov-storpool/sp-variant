@@ -43,6 +43,11 @@ detect_from_os_release()
 		return
 	fi
 	
+	if [ "$os_id" = 'almalinux' ] && printf -- '%s\n' "$version_id" | grep -Eqe '^10($|\.[0-9])'; then
+		printf -- '%s\n' 'ALMA10'
+		return
+	fi
+	
 	if [ "$os_id" = 'centos' ] && printf -- '%s\n' "$version_id" | grep -Eqe '^7($|\.[0-9])'; then
 		printf -- '%s\n' 'CENTOS7'
 		return
@@ -70,16 +75,6 @@ detect_from_os_release()
 	
 	if [ "$os_id" = 'debian' ] && printf -- '%s\n' "$version_id" | grep -Eqe '^12$'; then
 		printf -- '%s\n' 'DEBIAN12'
-		return
-	fi
-
-	if [ "$os_id" = 'linuxmint' ] && printf -- '%s\n' "$version_id" | grep -Eqe '^6$'; then
-		printf -- '%s\n' 'DEBIAN12'
-		return
-	fi
-
-	if [ "$os_id" = 'linuxmint' ] && printf -- '%s\n' "$version_id" | grep -Eqe '^7$'; then
-		printf -- '%s\n' 'DEBIAN13'
 		return
 	fi
 	
@@ -216,6 +211,11 @@ cmd_detect()
 		return
 	fi
 	
+	if [ -r '/etc/redhat-release' ] && grep -Eqe '^AlmaLinux[[:space:]].*[[:space:]]10\.[0-9]' -- '/etc/redhat-release'; then
+		printf -- '%s\n' 'ALMA10'
+		return
+	fi
+	
 	if [ -r '/etc/os-release' ] && grep -Eqe '^PRETTY_NAME=.*Ubuntu[[:space:]]+18\.04' -- '/etc/os-release'; then
 		printf -- '%s\n' 'UBUNTU1804'
 		return
@@ -251,7 +251,7 @@ cmd_detect()
 		return
 	fi
 	
-	if [ -r '/etc/os-release' ] && grep -Eqe '^PRETTY_NAME=.*Debian[[:space:]]+GNU/Linux[[:space:]]+(trixie|13)([[:space:]]|/)' -- '/etc/os-release'; then
+	if [ -r '/etc/os-release' ] && grep -Eqe '^PRETTY_NAME=.*(Debian[[:space:]]+GNU/Linux[[:space:]]+(trixie|13)([[:space:]]|/)|LMDE[[:space:]]+7)' -- '/etc/os-release'; then
 		printf -- '%s\n' 'DEBIAN13'
 		return
 	fi
@@ -453,6 +453,112 @@ show_ALMA9()
   "initramfs_flavor": "mkinitrd",
   "min_sys_python": "3.9",
   "name": "ALMA9",
+  "package": {
+    "KMOD": "kmod",
+    "LIBCGROUP": "bash",
+    "LIBUDEV": "systemd-libs",
+    "OPENSSL": "openssl-libs",
+    "PERL_AUTODIE": "perl-autodie",
+    "PERL_FILE_PATH": "perl-File-Path",
+    "PERL_LWP_PROTO_HTTPS": "perl-LWP-Protocol-https",
+    "PERL_SYS_SYSLOG": "perl-Sys-Syslog",
+    "PROCPS": "procps-ng",
+    "PYTHON_SIMPLEJSON": "bash",
+    "UDEV": "systemd"
+  },
+  "parent": "ALMA10",
+  "repo": {
+    "keyring": "redhat/repo/RPM-GPG-KEY-StorPool",
+    "yumdef": "redhat/repo/storpool-centos.repo"
+  },
+  "supported": {
+    "repo": false
+  },
+  "systemd_lib": "usr/lib/systemd/system"
+}
+EOVARIANT_JSON
+}
+
+show_ALMA10()
+{
+	cat <<'EOVARIANT_JSON'
+  {
+  "builder": {
+    "alias": "alma10",
+    "base_image": "almalinux:10",
+    "branch": "",
+    "kernel_package": "kernel-core",
+    "utf8_locale": "C.UTF-8"
+  },
+  "commands": {
+    "package": {
+      "install": [
+        "dnf",
+        "--disablerepo=*",
+        "--enablerepo=appstream",
+        "--enablerepo=baseos",
+        "--enablerepo=crb",
+        "--enablerepo=storpool-contrib",
+        "install",
+        "-q",
+        "-y",
+        "--"
+      ],
+      "list_all": [
+        "rpm",
+        "-qa",
+        "--qf",
+        "%{Name}\\t%{EVR}\\t%{Arch}\\tii\\n",
+        "--"
+      ],
+      "purge": [
+        "yum",
+        "remove",
+        "-q",
+        "-y",
+        "--"
+      ],
+      "remove": [
+        "yum",
+        "remove",
+        "-q",
+        "-y",
+        "--"
+      ],
+      "remove_impl": [
+        "rpm",
+        "-e",
+        "--"
+      ],
+      "update_db": [
+        "true"
+      ]
+    },
+    "pkgfile": {
+      "dep_query": [
+        "sh",
+        "-c",
+        "rpm -qpR -- \"$pkg\""
+      ],
+      "install": [
+        "sh",
+        "-c",
+        "\nunset to_install to_reinstall\nfor f in $packages; do\n    package=\"$(rpm -qp \"$f\")\"\n    if rpm -q -- \"$package\"; then\n        to_reinstall=\"$to_reinstall ./$f\"\n    else\n        to_install=\"$to_install ./$f\"\n    fi\ndone\n\nif [ -n \"$to_install\" ]; then\n    dnf install -y --disablerepo='*' --enablerepo=appstream,baseos,crb,storpool-contrib --setopt=localpkg_gpgcheck=0 -- $to_install\nfi\nif [ -n \"$to_reinstall\" ]; then\n    dnf reinstall -y --disablerepo='*' --enablerepo=appstream,baseos,crb,storpool-contrib --setopt=localpkg_gpgcheck=0 -- $to_reinstall\nfi\n"
+      ]
+    }
+  },
+  "descr": "AlmaLinux 10.x",
+  "detect": {
+    "filename": "/etc/redhat-release",
+    "os_id": "almalinux",
+    "os_version_regex": "^10(?:$|\\.[0-9])",
+    "regex": "^ AlmaLinux \\s .* \\s 10 \\. [0-9]"
+  },
+  "family": "redhat",
+  "file_ext": "rpm",
+  "initramfs_flavor": "mkinitrd",
+  "min_sys_python": "3.12",
+  "name": "ALMA10",
   "package": {
     "KMOD": "kmod",
     "LIBCGROUP": "bash",
@@ -1215,7 +1321,7 @@ show_DEBIAN13()
     "filename": "/etc/os-release",
     "os_id": "debian",
     "os_version_regex": "^13$",
-    "regex": "^\n                    PRETTY_NAME= .*\n                    Debian \\s+ GNU/Linux \\s+\n                    (?: trixie | 13 ) (?: \\s | / )\n                "
+    "regex": "^\n                    PRETTY_NAME= .*\n                    (Debian \\s+ GNU/Linux \\s+\n                    (?: trixie | 13 ) (?: \\s | / ) |\n                    LMDE\\s+7\n                    )\n                "
   },
   "family": "debian",
   "file_ext": "deb",
@@ -2479,6 +2585,7 @@ cmd_show_all()
     "CENTOS9",
     "ALMA8",
     "ALMA9",
+    "ALMA10",
     "UBUNTU1804",
     "UBUNTU2004",
     "UBUNTU2204",
@@ -2498,6 +2605,9 @@ EOPROLOGUE
   echo ','
   printf -- '    "%s": ' 'ALMA9'
   show_ALMA9
+  echo ','
+  printf -- '    "%s": ' 'ALMA10'
+  show_ALMA10
   echo ','
   printf -- '    "%s": ' 'CENTOS7'
   show_CENTOS7
@@ -2556,7 +2666,7 @@ EOPROLOGUE
 
 	cat <<'EOEPILOGUE'
   },
-  "version": "3.5.5"
+  "version": "3.5.6"
 }
 EOEPILOGUE
 }
@@ -2580,7 +2690,7 @@ EOPROLOGUE
 
 	cat <<'EOEPILOGUE'
   ,
-  "version": "3.5.5"
+  "version": "3.5.6"
 }
 EOEPILOGUE
 }
@@ -2711,6 +2821,104 @@ fi
 			;;
 		
 		ALMA9)
+			case "$cmd_cat" in
+				
+				package)
+					case "$cmd_item" in
+						
+						install)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'dnf' '--disablerepo=*' '--enablerepo=appstream' '--enablerepo=baseos' '--enablerepo=crb' '--enablerepo=storpool-contrib' 'install' '-q' '-y' '--'  "$@"
+							;;
+						
+						list_all)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'rpm' '-qa' '--qf' '%{Name}\t%{EVR}\t%{Arch}\tii\n' '--'  "$@"
+							;;
+						
+						purge)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'yum' 'remove' '-q' '-y' '--'  "$@"
+							;;
+						
+						remove)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'yum' 'remove' '-q' '-y' '--'  "$@"
+							;;
+						
+						remove_impl)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'rpm' '-e' '--'  "$@"
+							;;
+						
+						update_db)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'true'  "$@"
+							;;
+						
+
+						*)
+							echo "Invalid command '$cmd_item' in the '$cmd_cat' category" 1>&2
+							exit 1
+							;;
+					esac
+					;;
+				
+				pkgfile)
+					case "$cmd_item" in
+						
+						dep_query)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'sh' '-c' 'rpm -qpR -- "$pkg"'  "$@"
+							;;
+						
+						install)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'sh' '-c' '
+unset to_install to_reinstall
+for f in $packages; do
+    package="$(rpm -qp "$f")"
+    if rpm -q -- "$package"; then
+        to_reinstall="$to_reinstall ./$f"
+    else
+        to_install="$to_install ./$f"
+    fi
+done
+
+if [ -n "$to_install" ]; then
+    dnf install -y --disablerepo='*' --enablerepo=appstream,baseos,crb,storpool-contrib --setopt=localpkg_gpgcheck=0 -- $to_install
+fi
+if [ -n "$to_reinstall" ]; then
+    dnf reinstall -y --disablerepo='*' --enablerepo=appstream,baseos,crb,storpool-contrib --setopt=localpkg_gpgcheck=0 -- $to_reinstall
+fi
+'  "$@"
+							;;
+						
+
+						*)
+							echo "Invalid command '$cmd_item' in the '$cmd_cat' category" 1>&2
+							exit 1
+							;;
+					esac
+					;;
+				
+
+				*)
+					echo "Invalid command category '$cmd_cat'" 1>&2
+					exit 1
+					;;
+			esac
+			;;
+		
+		ALMA10)
 			case "$cmd_cat" in
 				
 				package)
@@ -4572,6 +4780,12 @@ cmd_repo_add()
 			
 			;;
 		
+		ALMA10)
+			
+			repo_add_yum 'ALMA10' "$vdir" "$repotype" 'redhat/repo/storpool-centos.repo' 'redhat/repo/RPM-GPG-KEY-StorPool'
+			
+			;;
+		
 		CENTOS7)
 			
 			repo_add_yum 'CENTOS7' "$vdir" "$repotype" 'redhat/repo/storpool-centos.repo' 'redhat/repo/RPM-GPG-KEY-StorPool'
@@ -4731,7 +4945,7 @@ cmd_command()
 
 cmd_features()
 {
-	echo 'Features: format=1.4 version=3.5.5'
+	echo 'Features: format=1.4 version=3.5.6'
 }
 
 case "$1" in
@@ -4785,6 +4999,10 @@ case "$1" in
 			
 			ALMA9)
 				show_variant 'ALMA9'
+				;;
+			
+			ALMA10)
+				show_variant 'ALMA10'
 				;;
 			
 			CENTOS7)

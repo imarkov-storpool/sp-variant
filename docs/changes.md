@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.5.6] 2025-11-18
+
+- all:
+    - add Alma Linux 10
+    - recognize LMDE 7 as Debian 13
+
 ## [3.5.5] 2025-08-15
 
 ### Additions
@@ -648,7 +654,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - First public release.
 
-[Unreleased]: https://github.com/storpool/sp-variant/compare/release/3.5.5...main
+[Unreleased]: https://github.com/storpool/sp-variant/compare/release/3.5.6...main
+[3.5.6]: https://github.com/storpool/sp-variant/compare/release/3.5.4...release/3.5.6
 [3.5.5]: https://github.com/storpool/sp-variant/compare/release/3.5.4...release/3.5.5
 [3.5.4]: https://github.com/storpool/sp-variant/compare/release/3.5.3...release/3.5.4
 [3.5.3]: https://github.com/storpool/sp-variant/compare/release/3.5.2...release/3.5.3

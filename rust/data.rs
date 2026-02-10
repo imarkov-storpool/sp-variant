@@ -26,6 +26,8 @@ pub enum VariantKind {
     ALMA8,
     /// AlmaLinux 9.x
     ALMA9,
+    /// AlmaLinux 10.x
+    ALMA10,
     /// CentOS 7.x
     CENTOS7,
     /// CentOS 8.x
@@ -67,6 +69,7 @@ pub enum VariantKind {
 impl VariantKind {
     const ALMA8_NAME: &'static str = "ALMA8";
     const ALMA9_NAME: &'static str = "ALMA9";
+    const ALMA10_NAME: &'static str = "ALMA10";
     const CENTOS7_NAME: &'static str = "CENTOS7";
     const CENTOS8_NAME: &'static str = "CENTOS8";
     const CENTOS9_NAME: &'static str = "CENTOS9";
@@ -93,6 +96,7 @@ impl AsRef<str> for VariantKind {
         match *self {
             Self::ALMA8 => Self::ALMA8_NAME,
             Self::ALMA9 => Self::ALMA9_NAME,
+            Self::ALMA10 => Self::ALMA10_NAME,
             Self::CENTOS7 => Self::CENTOS7_NAME,
             Self::CENTOS8 => Self::CENTOS8_NAME,
             Self::CENTOS9 => Self::CENTOS9_NAME,
@@ -123,6 +127,7 @@ impl FromStr for VariantKind {
         match value {
             Self::ALMA8_NAME => Ok(Self::ALMA8),
             Self::ALMA9_NAME => Ok(Self::ALMA9),
+            Self::ALMA10_NAME => Ok(Self::ALMA10),
             Self::CENTOS7_NAME => Ok(Self::CENTOS7),
             Self::CENTOS8_NAME => Ok(Self::CENTOS8),
             Self::CENTOS9_NAME => Ok(Self::CENTOS9),
@@ -172,6 +177,7 @@ pub fn get_variants() -> &'static VariantDefTop {
                     VariantKind::CENTOS9,
                     VariantKind::ALMA8,
                     VariantKind::ALMA9,
+                    VariantKind::ALMA10,
                     VariantKind::UBUNTU1804,
                     VariantKind::UBUNTU2004,
                     VariantKind::UBUNTU2204,
@@ -351,7 +357,7 @@ fi
                                 kind: VariantKind::ALMA9,
                                 descr: "AlmaLinux 9.x".to_owned(),
                                 family: "redhat".to_owned(),
-                                parent: "".to_owned(),
+                                parent: "ALMA10".to_owned(),
                                 detect: Detect {
                                     filename: "/etc/redhat-release".to_owned(),
                                     #[allow(clippy::needless_raw_strings)]
@@ -500,6 +506,167 @@ fi
                                 builder: Builder {
                                     alias: "alma9".to_owned(),
                                     base_image: "almalinux:9".to_owned(),
+                                    branch: "".to_owned(),
+                                    kernel_package: "kernel-core".to_owned(),
+                                    utf8_locale: "C.UTF-8".to_owned(),
+                                },
+                            },
+                    ),
+                    (
+                            VariantKind::ALMA10,
+                            Variant {
+                                kind: VariantKind::ALMA10,
+                                descr: "AlmaLinux 10.x".to_owned(),
+                                family: "redhat".to_owned(),
+                                parent: "".to_owned(),
+                                detect: Detect {
+                                    filename: "/etc/redhat-release".to_owned(),
+                                    #[allow(clippy::needless_raw_strings)]
+                                    regex: r"^ AlmaLinux \s .* \s 10 \. [0-9]".to_owned(),
+                                    os_id: "almalinux".to_owned(),
+                                    #[allow(clippy::needless_raw_strings)]
+                                    os_version_regex: r"^10(?:$|\.[0-9])".to_owned(),
+                                },
+                                supported: Supported {
+                                    repo: false,
+                                },
+                                commands: HashMap::from(
+                                    [
+                                        (
+                                            "package".to_owned(),
+                                            HashMap::from(
+                                                [
+                                                    (
+                                                        "install".to_owned(),
+                                                        vec![
+                                                            "dnf".to_owned(),
+                                                            "--disablerepo=*".to_owned(),
+                                                            "--enablerepo=appstream".to_owned(),
+                                                            "--enablerepo=baseos".to_owned(),
+                                                            "--enablerepo=crb".to_owned(),
+                                                            "--enablerepo=storpool-contrib".to_owned(),
+                                                            "install".to_owned(),
+                                                            "-q".to_owned(),
+                                                            "-y".to_owned(),
+                                                            "--".to_owned(),
+                                                        ],
+                                                    ),
+                                                    (
+                                                        "list_all".to_owned(),
+                                                        vec![
+                                                            "rpm".to_owned(),
+                                                            "-qa".to_owned(),
+                                                            "--qf".to_owned(),
+                                                            "%{Name}\\t%{EVR}\\t%{Arch}\\tii\\n".to_owned(),
+                                                            "--".to_owned(),
+                                                        ],
+                                                    ),
+                                                    (
+                                                        "purge".to_owned(),
+                                                        vec![
+                                                            "yum".to_owned(),
+                                                            "remove".to_owned(),
+                                                            "-q".to_owned(),
+                                                            "-y".to_owned(),
+                                                            "--".to_owned(),
+                                                        ],
+                                                    ),
+                                                    (
+                                                        "remove".to_owned(),
+                                                        vec![
+                                                            "yum".to_owned(),
+                                                            "remove".to_owned(),
+                                                            "-q".to_owned(),
+                                                            "-y".to_owned(),
+                                                            "--".to_owned(),
+                                                        ],
+                                                    ),
+                                                    (
+                                                        "remove_impl".to_owned(),
+                                                        vec![
+                                                            "rpm".to_owned(),
+                                                            "-e".to_owned(),
+                                                            "--".to_owned(),
+                                                        ],
+                                                    ),
+                                                    (
+                                                        "update_db".to_owned(),
+                                                        vec![
+                                                            "true".to_owned(),
+                                                        ],
+                                                    ),
+                                                ]
+                                            ),
+                                        ),
+                                        (
+                                            "pkgfile".to_owned(),
+                                            HashMap::from(
+                                                [
+                                                    (
+                                                        "dep_query".to_owned(),
+                                                        vec![
+                                                            "sh".to_owned(),
+                                                            "-c".to_owned(),
+                                                            "rpm -qpR -- \"$pkg\"".to_owned(),
+                                                        ],
+                                                    ),
+                                                    (
+                                                        "install".to_owned(),
+                                                        vec![
+                                                            "sh".to_owned(),
+                                                            "-c".to_owned(),
+                                                            "
+unset to_install to_reinstall
+for f in $packages; do
+    package=\"$(rpm -qp \"$f\")\"
+    if rpm -q -- \"$package\"; then
+        to_reinstall=\"$to_reinstall ./$f\"
+    else
+        to_install=\"$to_install ./$f\"
+    fi
+done
+
+if [ -n \"$to_install\" ]; then
+    dnf install -y --disablerepo='*' --enablerepo=appstream,baseos,crb,storpool-contrib --setopt=localpkg_gpgcheck=0 -- $to_install
+fi
+if [ -n \"$to_reinstall\" ]; then
+    dnf reinstall -y --disablerepo='*' --enablerepo=appstream,baseos,crb,storpool-contrib --setopt=localpkg_gpgcheck=0 -- $to_reinstall
+fi
+".to_owned(),
+                                                        ],
+                                                    ),
+                                                ]
+                                            ),
+                                        ),
+                                    ]
+                                ),
+                                min_sys_python: "3.12".to_owned(),
+                                repo:
+                                    Repo::Yum(YumRepo {
+                                        yumdef: "redhat/repo/storpool-centos.repo".to_owned(),
+                                        keyring: "redhat/repo/RPM-GPG-KEY-StorPool".to_owned(),
+                                    }),
+                                    package: HashMap::from(
+                                    [
+                                        ("KMOD".to_owned(), "kmod".to_owned()),
+                                        ("LIBCGROUP".to_owned(), "bash".to_owned()),
+                                        ("LIBUDEV".to_owned(), "systemd-libs".to_owned()),
+                                        ("OPENSSL".to_owned(), "openssl-libs".to_owned()),
+                                        ("PERL_AUTODIE".to_owned(), "perl-autodie".to_owned()),
+                                        ("PERL_FILE_PATH".to_owned(), "perl-File-Path".to_owned()),
+                                        ("PERL_LWP_PROTO_HTTPS".to_owned(), "perl-LWP-Protocol-https".to_owned()),
+                                        ("PERL_SYS_SYSLOG".to_owned(), "perl-Sys-Syslog".to_owned()),
+                                        ("PROCPS".to_owned(), "procps-ng".to_owned()),
+                                        ("PYTHON_SIMPLEJSON".to_owned(), "bash".to_owned()),
+                                        ("UDEV".to_owned(), "systemd".to_owned()),
+                                    ]
+                                ),
+                                systemd_lib: "usr/lib/systemd/system".to_owned(),
+                                file_ext: "rpm".to_owned(),
+                                initramfs_flavor: "mkinitrd".to_owned(),
+                                builder: Builder {
+                                    alias: "alma10".to_owned(),
+                                    base_image: "almalinux:10".to_owned(),
                                     branch: "".to_owned(),
                                     kernel_package: "kernel-core".to_owned(),
                                     utf8_locale: "C.UTF-8".to_owned(),
@@ -1465,8 +1632,10 @@ fi
                                     #[allow(clippy::needless_raw_strings)]
                                     regex: r"^
                     PRETTY_NAME= .*
-                    Debian \s+ GNU/Linux \s+
-                    (?: trixie | 13 ) (?: \s | / )
+                    (Debian \s+ GNU/Linux \s+
+                    (?: trixie | 13 ) (?: \s | / ) |
+                    LMDE\s+7
+                    )
                 ".to_owned(),
                                     os_id: "debian".to_owned(),
                                     #[allow(clippy::needless_raw_strings)]
@@ -3337,7 +3506,7 @@ fi
                     ),
                 ]
             ),
-            version: "3.5.5".to_owned(),
+            version: "3.5.6".to_owned(),
         }
     });
     assert!(

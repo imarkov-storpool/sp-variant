@@ -138,8 +138,10 @@ _VARIANT_DEF: Final[list[defs.Variant | defs.VariantUpdate]] = [
             regex=re.compile(
                 r"""^
                     PRETTY_NAME= .*
-                    Debian \s+ GNU/Linux \s+
-                    (?: trixie | 13 ) (?: \s | / )
+                    (Debian \s+ GNU/Linux \s+
+                    (?: trixie | 13 ) (?: \s | / ) |
+                    LMDE\s+7
+                    )
                 """,
                 re.X,
             ),
@@ -366,15 +368,15 @@ _VARIANT_DEF: Final[list[defs.Variant | defs.VariantUpdate]] = [
         },
     ),
     defs.Variant(
-        name="ALMA9",
-        descr="AlmaLinux 9.x",
+        name="ALMA10",
+        descr="AlmaLinux 10.x",
         parent="",
         family="redhat",
         detect=defs.Detect(
             filename="/etc/redhat-release",
-            regex=re.compile(r"^ AlmaLinux \s .* \s 9 \. [0-9]", re.X),
+            regex=re.compile(r"^ AlmaLinux \s .* \s 10 \. [0-9]", re.X),
             os_id="almalinux",
-            os_version_regex=re.compile(r"^9(?:$|\.[0-9])"),
+            os_version_regex=re.compile(r"^10(?:$|\.[0-9])"),
         ),
         supported=defs.Supported(repo=False),
         commands=defs.Commands(
@@ -449,7 +451,7 @@ fi
                 ],
             ),
         ),
-        min_sys_python="3.9",
+        min_sys_python="3.12",
         repo=defs.YumRepo(
             yumdef="redhat/repo/storpool-centos.repo",
             keyring="redhat/repo/RPM-GPG-KEY-StorPool",
@@ -471,12 +473,30 @@ fi
         file_ext="rpm",
         initramfs_flavor="mkinitrd",
         builder=defs.Builder(
-            alias="alma9",
-            base_image="almalinux:9",
+            alias="alma10",
+            base_image="almalinux:10",
             branch="",
             kernel_package="kernel-core",
             utf8_locale="C.UTF-8",
         ),
+    ),
+    defs.VariantUpdate(
+        name="ALMA9",
+        descr="AlmaLinux 9.x",
+        parent="ALMA10",
+        detect=defs.Detect(
+            filename="/etc/redhat-release",
+            regex=re.compile(r"^ AlmaLinux \s .* \s 9 \. [0-9]", re.X),
+            os_id="almalinux",
+            os_version_regex=re.compile(r"^9(?:$|\.[0-9])"),
+        ),
+        updates={
+            "min_sys_python": "3.9",
+            "builder": {
+                "alias": "alma9",
+                "base_image": "almalinux:9",
+            },
+        },
     ),
     defs.VariantUpdate(
         name="ALMA8",
