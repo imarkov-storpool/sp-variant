@@ -72,6 +72,16 @@ detect_from_os_release()
 		printf -- '%s\n' 'DEBIAN12'
 		return
 	fi
+
+	if [ "$os_id" = 'linuxmint' ] && printf -- '%s\n' "$version_id" | grep -Eqe '^6$'; then
+		printf -- '%s\n' 'DEBIAN12'
+		return
+	fi
+
+	if [ "$os_id" = 'linuxmint' ] && printf -- '%s\n' "$version_id" | grep -Eqe '^7$'; then
+		printf -- '%s\n' 'DEBIAN13'
+		return
+	fi
 	
 	if [ "$os_id" = 'debian' ] && printf -- '%s\n' "$version_id" | grep -Eqe '^13$'; then
 		printf -- '%s\n' 'DEBIAN13'
