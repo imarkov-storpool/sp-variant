@@ -251,9 +251,39 @@ _VARIANT_DEF: Final[list[defs.Variant | defs.VariantUpdate]] = [
         },
     ),
     defs.VariantUpdate(
+        name="UBUNTU2604",
+        descr="Ubuntu 26.04 LTS (Resolute Raccoon)",
+        parent="DEBIAN13",
+        detect=defs.Detect(
+            filename="/etc/os-release",
+            regex=re.compile(
+                r"^ Ubuntu \s+ 26.04 \s+ LTS",
+                re.X,
+            ),
+            os_id="ubuntu",
+            os_version_regex=re.compile(r"^26\.04$"),
+        ),
+        updates={
+            "supported": {"repo": False},
+            "repo": {
+                "vendor": "ubuntu",
+                "codename": "resolute",
+            },
+            "min_sys_python": "3.14",
+            "package": {
+                "CPUPOWER": "linux-tools-generic",
+            },
+            "builder": {
+                "alias": "ubuntu-26.04",
+                "base_image": "ubuntu:resolute",
+                "branch": "ubuntu/resolute",
+            },
+        },
+    ),
+    defs.VariantUpdate(
         name="UBUNTU2404",
         descr="Ubuntu 24.04 LTS (Noble Numbat)",
-        parent="DEBIAN13",
+        parent="UBUNTU2604",
         detect=defs.Detect(
             filename="/etc/os-release",
             regex=re.compile(

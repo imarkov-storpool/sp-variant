@@ -138,6 +138,11 @@ detect_from_os_release()
 		return
 	fi
 	
+	if [ "$os_id" = 'ubuntu' ] && printf -- '%s\n' "$version_id" | grep -Eqe '^26\.04$'; then
+		printf -- '%s\n' 'UBUNTU2604'
+		return
+	fi
+	
 }
 
 cmd_detect()
@@ -233,6 +238,11 @@ cmd_detect()
 	
 	if [ -r '/etc/os-release' ] && grep -Eqe '^PRETTY_NAME=.*Ubuntu[[:space:]]+.*Noble' -- '/etc/os-release'; then
 		printf -- '%s\n' 'UBUNTU2404'
+		return
+	fi
+	
+	if [ -r '/etc/os-release' ] && grep -Eqe '^Ubuntu[[:space:]]+26.04[[:space:]]+LTS' -- '/etc/os-release'; then
+		printf -- '%s\n' 'UBUNTU2604'
 		return
 	fi
 	
@@ -2539,9 +2549,123 @@ show_UBUNTU2404()
     "LIBSSL": "libssl3",
     "MCELOG": "bash"
   },
-  "parent": "DEBIAN13",
+  "parent": "UBUNTU2604",
   "repo": {
     "codename": "noble",
+    "keyring": "debian/repo/storpool-keyring.gpg",
+    "req_packages": [
+      "ca-certificates"
+    ],
+    "sources": "debian/repo/storpool.sources",
+    "vendor": "ubuntu"
+  },
+  "supported": {
+    "repo": false
+  },
+  "systemd_lib": "lib/systemd/system"
+}
+EOVARIANT_JSON
+}
+
+show_UBUNTU2604()
+{
+	cat <<'EOVARIANT_JSON'
+  {
+  "builder": {
+    "alias": "ubuntu-26.04",
+    "base_image": "ubuntu:resolute",
+    "branch": "ubuntu/resolute",
+    "kernel_package": "linux-headers",
+    "utf8_locale": "C.UTF-8"
+  },
+  "commands": {
+    "package": {
+      "install": [
+        "env",
+        "DEBIAN_FRONTEND=noninteractive",
+        "apt-get",
+        "-q",
+        "-y",
+        "--no-install-recommends",
+        "install",
+        "--"
+      ],
+      "list_all": [
+        "dpkg-query",
+        "-W",
+        "-f",
+        "${Package}\\t${Version}\\t${Architecture}\\t${db:Status-Abbrev}\\n",
+        "--"
+      ],
+      "purge": [
+        "env",
+        "DEBIAN_FRONTEND=noninteractive",
+        "apt-get",
+        "-q",
+        "-y",
+        "purge",
+        "--"
+      ],
+      "remove": [
+        "env",
+        "DEBIAN_FRONTEND=noninteractive",
+        "apt-get",
+        "-q",
+        "-y",
+        "remove",
+        "--"
+      ],
+      "remove_impl": [
+        "env",
+        "DEBIAN_FRONTEND=noninteractive",
+        "dpkg",
+        "-r",
+        "--"
+      ],
+      "update_db": [
+        "apt-get",
+        "-q",
+        "-y",
+        "update"
+      ]
+    },
+    "pkgfile": {
+      "dep_query": [
+        "sh",
+        "-c",
+        "dpkg-deb -f -- \"$pkg\" \"Depends\" | sed -e \"s/ *, */,/g\" | tr \",\" \"\\n\""
+      ],
+      "install": [
+        "sh",
+        "-c",
+        "env DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --reinstall -y -o DPkg::Options::=--force-confnew -- $packages"
+      ]
+    }
+  },
+  "descr": "Ubuntu 26.04 LTS (Resolute Raccoon)",
+  "detect": {
+    "filename": "/etc/os-release",
+    "os_id": "ubuntu",
+    "os_version_regex": "^26\\.04$",
+    "regex": "^ Ubuntu \\s+ 26.04 \\s+ LTS"
+  },
+  "family": "debian",
+  "file_ext": "deb",
+  "initramfs_flavor": "update-initramfs",
+  "min_sys_python": "3.14",
+  "name": "UBUNTU2604",
+  "package": {
+    "BINDINGS_PYTHON": "python3",
+    "BINDINGS_PYTHON_CONFGET": "python3-confget",
+    "BINDINGS_PYTHON_SIMPLEJSON": "python3-simplejson",
+    "CGROUP": "cgroup-tools",
+    "CPUPOWER": "linux-tools-generic",
+    "LIBSSL": "libssl3",
+    "MCELOG": "bash"
+  },
+  "parent": "DEBIAN13",
+  "repo": {
+    "codename": "resolute",
     "keyring": "debian/repo/storpool-keyring.gpg",
     "req_packages": [
       "ca-certificates"
@@ -2590,6 +2714,7 @@ cmd_show_all()
     "UBUNTU2004",
     "UBUNTU2204",
     "UBUNTU2404",
+    "UBUNTU2604",
     "DEBIAN10",
     "DEBIAN11",
     "DEBIAN12",
@@ -2662,6 +2787,9 @@ EOPROLOGUE
   echo ','
   printf -- '    "%s": ' 'UBUNTU2404'
   show_UBUNTU2404
+  echo ','
+  printf -- '    "%s": ' 'UBUNTU2604'
+  show_UBUNTU2604
   
 
 	cat <<'EOEPILOGUE'
@@ -4627,6 +4755,87 @@ fi
 			esac
 			;;
 		
+		UBUNTU2604)
+			case "$cmd_cat" in
+				
+				package)
+					case "$cmd_item" in
+						
+						install)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'env' 'DEBIAN_FRONTEND=noninteractive' 'apt-get' '-q' '-y' '--no-install-recommends' 'install' '--'  "$@"
+							;;
+						
+						list_all)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'dpkg-query' '-W' '-f' '${Package}\t${Version}\t${Architecture}\t${db:Status-Abbrev}\n' '--'  "$@"
+							;;
+						
+						purge)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'env' 'DEBIAN_FRONTEND=noninteractive' 'apt-get' '-q' '-y' 'purge' '--'  "$@"
+							;;
+						
+						remove)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'env' 'DEBIAN_FRONTEND=noninteractive' 'apt-get' '-q' '-y' 'remove' '--'  "$@"
+							;;
+						
+						remove_impl)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'env' 'DEBIAN_FRONTEND=noninteractive' 'dpkg' '-r' '--'  "$@"
+							;;
+						
+						update_db)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'apt-get' '-q' '-y' 'update'  "$@"
+							;;
+						
+
+						*)
+							echo "Invalid command '$cmd_item' in the '$cmd_cat' category" 1>&2
+							exit 1
+							;;
+					esac
+					;;
+				
+				pkgfile)
+					case "$cmd_item" in
+						
+						dep_query)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'sh' '-c' 'dpkg-deb -f -- "$pkg" "Depends" | sed -e "s/ *, */,/g" | tr "," "\n"'  "$@"
+							;;
+						
+						install)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'sh' '-c' 'env DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --reinstall -y -o DPkg::Options::=--force-confnew -- $packages'  "$@"
+							;;
+						
+
+						*)
+							echo "Invalid command '$cmd_item' in the '$cmd_cat' category" 1>&2
+							exit 1
+							;;
+					esac
+					;;
+				
+
+				*)
+					echo "Invalid command category '$cmd_cat'" 1>&2
+					exit 1
+					;;
+			esac
+			;;
+		
 
 		*)
 			echo "Internal error: invalid variant '$name'" 1>&2
@@ -4894,6 +5103,12 @@ cmd_repo_add()
 			
 			;;
 		
+		UBUNTU2604)
+			
+			repo_add_deb 'UBUNTU2604' "$vdir" "$repotype" 'debian/repo/storpool.sources' 'debian/repo/storpool-keyring.gpg' 'ca-certificates'
+			
+			;;
+		
 
 		*)
 			echo "Internal error: '$variant' should be recognized at this point" 1>&2
@@ -5075,6 +5290,10 @@ case "$1" in
 			
 			UBUNTU2404)
 				show_variant 'UBUNTU2404'
+				;;
+			
+			UBUNTU2604)
+				show_variant 'UBUNTU2604'
 				;;
 			
 
