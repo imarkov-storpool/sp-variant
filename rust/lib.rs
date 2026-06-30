@@ -124,6 +124,16 @@ pub struct YumRepo {
     pub keyring: String,
 }
 
+/// Suse Yum/DNF package repository data.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[non_exhaustive]
+pub struct SuseRepo {
+    /// The *.repo file to copy to /etc/yum.repos.d/.
+    pub repodef: String,
+    /// The keyring file to copy to /etc/pki/rpm-gpg/.
+    pub keyring: String,
+}
+
 /// OS package repository data.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -133,6 +143,8 @@ pub enum Repo {
     Deb(DebRepo),
     /// CentOS/Oracle repository data.
     Yum(YumRepo),
+    /// SLES repository data.
+    Suse(SuseRepo),
 }
 
 /// StorPool builder data.

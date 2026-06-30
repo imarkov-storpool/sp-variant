@@ -985,6 +985,102 @@ fi
             },
         },
     ),
+        defs.Variant(
+        name="SLES16",
+        descr="SUSE Linux Enterprise Server 16.0",
+        parent="",
+        family="suse",
+        detect=defs.Detect(
+            filename="/etc/os-release",
+            regex=re.compile(
+                r"""^
+                    PRETTY_NAME= .*
+                    SUSE \s+ Linux \s+ Enterprise \s+ Server \s+ 16\.[0-9]+
+                    .*
+                """,
+                re.X,
+            ),
+            os_id="sles",
+            os_version_regex=re.compile(r"^16$"),
+        ),
+        supported=defs.Supported(repo=False),
+        commands=defs.Commands(
+            package=defs.CommandsPackage(
+                update_db=["zypper", "refresh-services", "--with-repos"],
+                install=[
+                    "zypper",
+                    "-q",
+                    "--non-interactive",
+                    "install",
+                    "--no-recommends",
+                    "--",
+                ],
+                list_all=[
+                    "zypper",
+                    "packages",
+                    "--installed-only",
+                    "--",
+                ],
+                purge=[
+                    "zypper",
+                    "-q",
+                    "--non-interactive",
+                    "remove",
+                    "--clean-deps",
+                    "--",
+                ],
+                remove=[
+                    "zypper",
+                    "-q",
+                    "--non-interactive",
+                    "remove",
+                    "--",
+                ],
+                remove_impl=[
+                    "rpm",
+                    "-e",
+                    "--",
+                ],
+            ),
+            pkgfile=defs.CommandsPkgFile(
+                dep_query=[
+                    "sh",
+                    "-c",
+                    'rpm -qpR -- "$pkg"',
+                ],
+                install=[
+                    "sh",
+                    "zypper",
+                    "-q",
+                    "--non-interactive",
+                    "install",
+                    "--no-recommends",
+                    "-- $packages",
+                ],
+            ),
+        ),
+        min_sys_python="3.13",
+        repo=defs.SuseRepo(
+            repodef="suse/repo/storpool.repo",
+            keyring="suse/repo/storpool.asc"
+        ),
+        package={
+            "BINDINGS_PYTHON": "python3",
+            "BINDINGS_PYTHON_CONFGET": "python3-confget",
+            "BINDINGS_PYTHON_SIMPLEJSON": "python3-simplejson",
+            "CPUPOWER": "cpupower",
+        },
+        systemd_lib="lib/systemd/system",
+        file_ext="rpm",
+        initramfs_flavor="mkinitrd",
+        builder=defs.Builder(
+            alias="sles16",
+            base_image="registry.suse.com/bci/bci-base:16.0",
+            branch="sles/16",
+            kernel_package="kernel-devel",
+            utf8_locale="C.UTF-8",
+        ),
+    ),
 ]
 
 VARIANTS: Final[dict[str, defs.Variant]] = {}

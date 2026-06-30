@@ -101,6 +101,16 @@ class YumRepo(NamedTuple):
     """The keyring file to copy to /etc/pki/rpm-gpg/."""
 
 
+class SuseRepo(NamedTuple):
+    """Suse Yum/DNF package repository data."""
+
+    repodef: str
+    """The *.repo file to copy to /etc/zypp/repos.d/."""
+
+    keyring: str
+    """The keyring file to copy to /usr/lib/rpm/gnupg/keys/."""
+
+
 class Builder(NamedTuple):
     """StorPool builder data."""
 

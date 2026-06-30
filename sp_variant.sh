@@ -118,6 +118,11 @@ detect_from_os_release()
 		return
 	fi
 	
+	if [ "$os_id" = 'sles' ] && printf -- '%s\n' "$version_id" | grep -Eqe '^16$'; then
+		printf -- '%s\n' 'SLES16'
+		return
+	fi
+	
 	if [ "$os_id" = 'ubuntu' ] && printf -- '%s\n' "$version_id" | grep -Eqe '^18\.04$'; then
 		printf -- '%s\n' 'UBUNTU1804'
 		return
@@ -160,6 +165,11 @@ cmd_detect()
 		return
 	fi
 
+	
+	if [ -r '/etc/os-release' ] && grep -Eqe '^PRETTY_NAME=.*SUSE[[:space:]]+Linux[[:space:]]+Enterprise[[:space:]]+Server[[:space:]]+16\.[0-9]+.*' -- '/etc/os-release'; then
+		printf -- '%s\n' 'SLES16'
+		return
+	fi
 	
 	if [ -r '/etc/redhat-release' ] && grep -Eqe '^Rocky[[:space:]]+Linux[[:space:]].*[[:space:]]8\.([4-9]|[1-9][0-9])' -- '/etc/redhat-release'; then
 		printf -- '%s\n' 'ROCKY8'
@@ -2111,6 +2121,107 @@ show_ROCKY9()
 EOVARIANT_JSON
 }
 
+show_SLES16()
+{
+	cat <<'EOVARIANT_JSON'
+  {
+  "builder": {
+    "alias": "sles16",
+    "base_image": "registry.suse.com/bci/bci-base:16.0",
+    "branch": "sles/16",
+    "kernel_package": "kernel-devel",
+    "utf8_locale": "C.UTF-8"
+  },
+  "commands": {
+    "package": {
+      "install": [
+        "zypper",
+        "-q",
+        "--non-interactive",
+        "install",
+        "--no-recommends",
+        "--"
+      ],
+      "list_all": [
+        "zypper",
+        "packages",
+        "--installed-only",
+        "--"
+      ],
+      "purge": [
+        "zypper",
+        "-q",
+        "--non-interactive",
+        "remove",
+        "--clean-deps",
+        "--"
+      ],
+      "remove": [
+        "zypper",
+        "-q",
+        "--non-interactive",
+        "remove",
+        "--"
+      ],
+      "remove_impl": [
+        "rpm",
+        "-e",
+        "--"
+      ],
+      "update_db": [
+        "zypper",
+        "refresh-services",
+        "--with-repos"
+      ]
+    },
+    "pkgfile": {
+      "dep_query": [
+        "sh",
+        "-c",
+        "rpm -qpR -- \"$pkg\""
+      ],
+      "install": [
+        "sh",
+        "zypper",
+        "-q",
+        "--non-interactive",
+        "install",
+        "--no-recommends",
+        "-- $packages"
+      ]
+    }
+  },
+  "descr": "SUSE Linux Enterprise Server 16.0",
+  "detect": {
+    "filename": "/etc/os-release",
+    "os_id": "sles",
+    "os_version_regex": "^16$",
+    "regex": "^\n                    PRETTY_NAME= .*\n                    SUSE \\s+ Linux \\s+ Enterprise \\s+ Server \\s+ 16\\.[0-9]+\n                    .*\n                "
+  },
+  "family": "suse",
+  "file_ext": "rpm",
+  "initramfs_flavor": "mkinitrd",
+  "min_sys_python": "3.13",
+  "name": "SLES16",
+  "package": {
+    "BINDINGS_PYTHON": "python3",
+    "BINDINGS_PYTHON_CONFGET": "python3-confget",
+    "BINDINGS_PYTHON_SIMPLEJSON": "python3-simplejson",
+    "CPUPOWER": "cpupower"
+  },
+  "parent": "",
+  "repo": {
+    "keyring": "suse/repo/storpool.asc",
+    "repodef": "suse/repo/storpool.repo"
+  },
+  "supported": {
+    "repo": false
+  },
+  "systemd_lib": "lib/systemd/system"
+}
+EOVARIANT_JSON
+}
+
 show_UBUNTU1804()
 {
 	cat <<'EOVARIANT_JSON'
@@ -2698,6 +2809,7 @@ cmd_show_all()
     }
   },
   "order": [
+    "SLES16",
     "ROCKY8",
     "ROCKY9",
     "RHEL8",
@@ -2775,6 +2887,9 @@ EOPROLOGUE
   echo ','
   printf -- '    "%s": ' 'ROCKY9'
   show_ROCKY9
+  echo ','
+  printf -- '    "%s": ' 'SLES16'
+  show_SLES16
   echo ','
   printf -- '    "%s": ' 'UBUNTU1804'
   show_UBUNTU1804
@@ -4431,6 +4546,87 @@ fi
 			esac
 			;;
 		
+		SLES16)
+			case "$cmd_cat" in
+				
+				package)
+					case "$cmd_item" in
+						
+						install)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'zypper' '-q' '--non-interactive' 'install' '--no-recommends' '--'  "$@"
+							;;
+						
+						list_all)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'zypper' 'packages' '--installed-only' '--'  "$@"
+							;;
+						
+						purge)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'zypper' '-q' '--non-interactive' 'remove' '--clean-deps' '--'  "$@"
+							;;
+						
+						remove)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'zypper' '-q' '--non-interactive' 'remove' '--'  "$@"
+							;;
+						
+						remove_impl)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'rpm' '-e' '--'  "$@"
+							;;
+						
+						update_db)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'zypper' 'refresh-services' '--with-repos'  "$@"
+							;;
+						
+
+						*)
+							echo "Invalid command '$cmd_item' in the '$cmd_cat' category" 1>&2
+							exit 1
+							;;
+					esac
+					;;
+				
+				pkgfile)
+					case "$cmd_item" in
+						
+						dep_query)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'sh' '-c' 'rpm -qpR -- "$pkg"'  "$@"
+							;;
+						
+						install)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'sh' 'zypper' '-q' '--non-interactive' 'install' '--no-recommends' '-- $packages'  "$@"
+							;;
+						
+
+						*)
+							echo "Invalid command '$cmd_item' in the '$cmd_cat' category" 1>&2
+							exit 1
+							;;
+					esac
+					;;
+				
+
+				*)
+					echo "Invalid command category '$cmd_cat'" 1>&2
+					exit 1
+					;;
+			esac
+			;;
+		
 		UBUNTU1804)
 			case "$cmd_cat" in
 				
@@ -4919,6 +5115,30 @@ repo_add_yum()
 	yum --disablerepo='*' --enablerepo="storpool-$repotype" clean metadata
 }
 
+repo_add_suse()
+{
+	local name="$1" vdir="$2" repotype="$3" repodef="$4" keyring="$5"
+	local gpgdir='/usr/lib/rpm/gnupg/keys'
+
+	zypper -q --non-interactive install --no-recommends -- ca-certificates
+
+	local repobase repofile
+	repobase="$(basename -- "$repodef")"
+	repofile="$(repo_add_extension "$repobase" "$repotype")"
+	[ -n "$repofile" ]
+	copy_file "$vdir/$repofile" /etc/zypp/repos.d
+
+	local keybase
+	keybase="$(basename -- "$keyring")"
+	copy_file "$vdir/$keybase" "$gpgdir"
+
+	if [ -n "$(command -v rpmkeys || true)" ]; then
+		rpmkeys --import "$gpgdir/$(basename -- "$keybase")"
+	fi
+
+	zypper -q --non-interactive refresh "storpool-$repotype"
+}
+
 repo_add_deb()
 {
 	local name="$1" vdir="$2" repotype="$3" srcdef="$4" keyring="$5" packages="$6"
@@ -5076,6 +5296,12 @@ cmd_repo_add()
 		ROCKY9)
 			
 			repo_add_yum 'ROCKY9' "$vdir" "$repotype" 'redhat/repo/storpool-centos.repo' 'redhat/repo/RPM-GPG-KEY-StorPool'
+			
+			;;
+		
+		SLES16)
+			
+			repo_add_suse 'SLES16' "$vdir" "$repotype" 'suse/repo/storpool.repo' 'suse/repo/storpool.asc'
 			
 			;;
 		
@@ -5274,6 +5500,10 @@ case "$1" in
 			
 			ROCKY9)
 				show_variant 'ROCKY9'
+				;;
+			
+			SLES16)
+				show_variant 'SLES16'
 				;;
 			
 			UBUNTU1804)
