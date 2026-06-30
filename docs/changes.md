@@ -12,6 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.5.7] 2026-06-30
+
+### Additions
+
+- all:
+    - add Ubuntu 26.04
+    - add SLES 16
+
 ## [3.5.6] 2025-11-18
 
 - all:
@@ -654,8 +662,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - First public release.
 
-[Unreleased]: https://github.com/storpool/sp-variant/compare/release/3.5.6...main
-[3.5.6]: https://github.com/storpool/sp-variant/compare/release/3.5.4...release/3.5.6
+[Unreleased]: https://github.com/storpool/sp-variant/compare/release/3.5.7...main
+[3.5.7]: https://github.com/storpool/sp-variant/compare/release/3.5.6...release/3.5.7
+[3.5.6]: https://github.com/storpool/sp-variant/compare/release/3.5.5...release/3.5.6
 [3.5.5]: https://github.com/storpool/sp-variant/compare/release/3.5.4...release/3.5.5
 [3.5.4]: https://github.com/storpool/sp-variant/compare/release/3.5.3...release/3.5.4
 [3.5.3]: https://github.com/storpool/sp-variant/compare/release/3.5.2...release/3.5.3

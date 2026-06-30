@@ -3813,7 +3813,7 @@ fi
                     ),
                 ]
             ),
-            version: "3.5.6".to_owned(),
+            version: "3.5.7".to_owned(),
         }
     });
     assert!(
