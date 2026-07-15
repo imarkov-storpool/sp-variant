@@ -2920,12 +2920,12 @@ fi
                                     #[allow(clippy::needless_raw_strings)]
                                     regex: r"^
                     PRETTY_NAME= .*
-                    SUSE \s+ Linux \s+ Enterprise \s+ Server \s+ 16\.[0-9]+
+                    SUSE \s+ Linux \s+ Enterprise \s+ Server \s+ 16(\.[0-9]+)?
                     .*
                 ".to_owned(),
                                     os_id: "sles".to_owned(),
                                     #[allow(clippy::needless_raw_strings)]
-                                    os_version_regex: r"^16$".to_owned(),
+                                    os_version_regex: r"^16(\.[0-9]+)?$".to_owned(),
                                 },
                                 supported: Supported {
                                     repo: false,
@@ -3813,7 +3813,7 @@ fi
                     ),
                 ]
             ),
-            version: "3.5.7".to_owned(),
+            version: "3.5.8".to_owned(),
         }
     });
     assert!(

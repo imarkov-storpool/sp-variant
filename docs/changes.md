@@ -12,6 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.5.8] 2026-07-15
+
+### Fixes
+
+- all:
+  - Make SLES 16 version match more 
+  - Bump forgotten Rust package version
+
 ## [3.5.7] 2026-06-30
 
 ### Additions
@@ -662,7 +670,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - First public release.
 
-[Unreleased]: https://github.com/storpool/sp-variant/compare/release/3.5.7...main
+[Unreleased]: https://github.com/storpool/sp-variant/compare/release/3.5.8...main
+[3.5.8]: https://github.com/storpool/sp-variant/compare/release/3.5.7...release/3.5.8
 [3.5.7]: https://github.com/storpool/sp-variant/compare/release/3.5.6...release/3.5.7
 [3.5.6]: https://github.com/storpool/sp-variant/compare/release/3.5.5...release/3.5.6
 [3.5.5]: https://github.com/storpool/sp-variant/compare/release/3.5.4...release/3.5.5

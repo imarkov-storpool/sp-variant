@@ -118,7 +118,7 @@ detect_from_os_release()
 		return
 	fi
 	
-	if [ "$os_id" = 'sles' ] && printf -- '%s\n' "$version_id" | grep -Eqe '^16$'; then
+	if [ "$os_id" = 'sles' ] && printf -- '%s\n' "$version_id" | grep -Eqe '^16(\.[0-9]+)?$'; then
 		printf -- '%s\n' 'SLES16'
 		return
 	fi
@@ -166,7 +166,7 @@ cmd_detect()
 	fi
 
 	
-	if [ -r '/etc/os-release' ] && grep -Eqe '^PRETTY_NAME=.*SUSE[[:space:]]+Linux[[:space:]]+Enterprise[[:space:]]+Server[[:space:]]+16\.[0-9]+.*' -- '/etc/os-release'; then
+	if [ -r '/etc/os-release' ] && grep -Eqe '^PRETTY_NAME=.*SUSE[[:space:]]+Linux[[:space:]]+Enterprise[[:space:]]+Server[[:space:]]+16(\.[0-9]+)?.*' -- '/etc/os-release'; then
 		printf -- '%s\n' 'SLES16'
 		return
 	fi
@@ -2195,8 +2195,8 @@ show_SLES16()
   "detect": {
     "filename": "/etc/os-release",
     "os_id": "sles",
-    "os_version_regex": "^16$",
-    "regex": "^\n                    PRETTY_NAME= .*\n                    SUSE \\s+ Linux \\s+ Enterprise \\s+ Server \\s+ 16\\.[0-9]+\n                    .*\n                "
+    "os_version_regex": "^16(\\.[0-9]+)?$",
+    "regex": "^\n                    PRETTY_NAME= .*\n                    SUSE \\s+ Linux \\s+ Enterprise \\s+ Server \\s+ 16(\\.[0-9]+)?\n                    .*\n                "
   },
   "family": "suse",
   "file_ext": "rpm",
@@ -2909,7 +2909,7 @@ EOPROLOGUE
 
 	cat <<'EOEPILOGUE'
   },
-  "version": "3.5.7"
+  "version": "3.5.8"
 }
 EOEPILOGUE
 }
@@ -2933,7 +2933,7 @@ EOPROLOGUE
 
 	cat <<'EOEPILOGUE'
   ,
-  "version": "3.5.7"
+  "version": "3.5.8"
 }
 EOEPILOGUE
 }
@@ -5386,7 +5386,7 @@ cmd_command()
 
 cmd_features()
 {
-	echo 'Features: format=1.4 version=3.5.7'
+	echo 'Features: format=1.4 version=3.5.8'
 }
 
 case "$1" in
