@@ -995,13 +995,13 @@ fi
             regex=re.compile(
                 r"""^
                     PRETTY_NAME= .*
-                    SUSE \s+ Linux \s+ Enterprise \s+ Server \s+ 16\.[0-9]+
+                    SUSE \s+ Linux \s+ Enterprise \s+ Server \s+ 16(\.[0-9]+)?
                     .*
                 """,
                 re.X,
             ),
             os_id="sles",
-            os_version_regex=re.compile(r"^16$"),
+            os_version_regex=re.compile(r"^16(\.[0-9]+)?$"),
         ),
         supported=defs.Supported(repo=False),
         commands=defs.Commands(
