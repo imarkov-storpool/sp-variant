@@ -118,6 +118,11 @@ detect_from_os_release()
 		return
 	fi
 	
+	if [ "$os_id" = 'sles' ] && printf -- '%s\n' "$version_id" | grep -Eqe '^16$'; then
+		printf -- '%s\n' 'SLES16'
+		return
+	fi
+	
 	if [ "$os_id" = 'ubuntu' ] && printf -- '%s\n' "$version_id" | grep -Eqe '^18\.04$'; then
 		printf -- '%s\n' 'UBUNTU1804'
 		return
@@ -138,6 +143,11 @@ detect_from_os_release()
 		return
 	fi
 	
+	if [ "$os_id" = 'ubuntu' ] && printf -- '%s\n' "$version_id" | grep -Eqe '^26\.04$'; then
+		printf -- '%s\n' 'UBUNTU2604'
+		return
+	fi
+	
 }
 
 cmd_detect()
@@ -155,6 +165,11 @@ cmd_detect()
 		return
 	fi
 
+	
+	if [ -r '/etc/os-release' ] && grep -Eqe '^PRETTY_NAME=.*SUSE[[:space:]]+Linux[[:space:]]+Enterprise[[:space:]]+Server[[:space:]]+16\.[0-9]+.*' -- '/etc/os-release'; then
+		printf -- '%s\n' 'SLES16'
+		return
+	fi
 	
 	if [ -r '/etc/redhat-release' ] && grep -Eqe '^Rocky[[:space:]]+Linux[[:space:]].*[[:space:]]8\.([4-9]|[1-9][0-9])' -- '/etc/redhat-release'; then
 		printf -- '%s\n' 'ROCKY8'
@@ -233,6 +248,11 @@ cmd_detect()
 	
 	if [ -r '/etc/os-release' ] && grep -Eqe '^PRETTY_NAME=.*Ubuntu[[:space:]]+.*Noble' -- '/etc/os-release'; then
 		printf -- '%s\n' 'UBUNTU2404'
+		return
+	fi
+	
+	if [ -r '/etc/os-release' ] && grep -Eqe '^Ubuntu[[:space:]]+26.04[[:space:]]+LTS' -- '/etc/os-release'; then
+		printf -- '%s\n' 'UBUNTU2604'
 		return
 	fi
 	
@@ -2101,6 +2121,107 @@ show_ROCKY9()
 EOVARIANT_JSON
 }
 
+show_SLES16()
+{
+	cat <<'EOVARIANT_JSON'
+  {
+  "builder": {
+    "alias": "sles16",
+    "base_image": "registry.suse.com/bci/bci-base:16.0",
+    "branch": "sles/16",
+    "kernel_package": "kernel-devel",
+    "utf8_locale": "C.UTF-8"
+  },
+  "commands": {
+    "package": {
+      "install": [
+        "zypper",
+        "-q",
+        "--non-interactive",
+        "install",
+        "--no-recommends",
+        "--"
+      ],
+      "list_all": [
+        "zypper",
+        "packages",
+        "--installed-only",
+        "--"
+      ],
+      "purge": [
+        "zypper",
+        "-q",
+        "--non-interactive",
+        "remove",
+        "--clean-deps",
+        "--"
+      ],
+      "remove": [
+        "zypper",
+        "-q",
+        "--non-interactive",
+        "remove",
+        "--"
+      ],
+      "remove_impl": [
+        "rpm",
+        "-e",
+        "--"
+      ],
+      "update_db": [
+        "zypper",
+        "refresh-services",
+        "--with-repos"
+      ]
+    },
+    "pkgfile": {
+      "dep_query": [
+        "sh",
+        "-c",
+        "rpm -qpR -- \"$pkg\""
+      ],
+      "install": [
+        "sh",
+        "zypper",
+        "-q",
+        "--non-interactive",
+        "install",
+        "--no-recommends",
+        "-- $packages"
+      ]
+    }
+  },
+  "descr": "SUSE Linux Enterprise Server 16.0",
+  "detect": {
+    "filename": "/etc/os-release",
+    "os_id": "sles",
+    "os_version_regex": "^16$",
+    "regex": "^\n                    PRETTY_NAME= .*\n                    SUSE \\s+ Linux \\s+ Enterprise \\s+ Server \\s+ 16\\.[0-9]+\n                    .*\n                "
+  },
+  "family": "suse",
+  "file_ext": "rpm",
+  "initramfs_flavor": "mkinitrd",
+  "min_sys_python": "3.13",
+  "name": "SLES16",
+  "package": {
+    "BINDINGS_PYTHON": "python3",
+    "BINDINGS_PYTHON_CONFGET": "python3-confget",
+    "BINDINGS_PYTHON_SIMPLEJSON": "python3-simplejson",
+    "CPUPOWER": "cpupower"
+  },
+  "parent": "",
+  "repo": {
+    "keyring": "suse/repo/storpool.asc",
+    "repodef": "suse/repo/storpool.repo"
+  },
+  "supported": {
+    "repo": false
+  },
+  "systemd_lib": "lib/systemd/system"
+}
+EOVARIANT_JSON
+}
+
 show_UBUNTU1804()
 {
 	cat <<'EOVARIANT_JSON'
@@ -2539,9 +2660,123 @@ show_UBUNTU2404()
     "LIBSSL": "libssl3",
     "MCELOG": "bash"
   },
-  "parent": "DEBIAN13",
+  "parent": "UBUNTU2604",
   "repo": {
     "codename": "noble",
+    "keyring": "debian/repo/storpool-keyring.gpg",
+    "req_packages": [
+      "ca-certificates"
+    ],
+    "sources": "debian/repo/storpool.sources",
+    "vendor": "ubuntu"
+  },
+  "supported": {
+    "repo": false
+  },
+  "systemd_lib": "lib/systemd/system"
+}
+EOVARIANT_JSON
+}
+
+show_UBUNTU2604()
+{
+	cat <<'EOVARIANT_JSON'
+  {
+  "builder": {
+    "alias": "ubuntu-26.04",
+    "base_image": "ubuntu:resolute",
+    "branch": "ubuntu/resolute",
+    "kernel_package": "linux-headers",
+    "utf8_locale": "C.UTF-8"
+  },
+  "commands": {
+    "package": {
+      "install": [
+        "env",
+        "DEBIAN_FRONTEND=noninteractive",
+        "apt-get",
+        "-q",
+        "-y",
+        "--no-install-recommends",
+        "install",
+        "--"
+      ],
+      "list_all": [
+        "dpkg-query",
+        "-W",
+        "-f",
+        "${Package}\\t${Version}\\t${Architecture}\\t${db:Status-Abbrev}\\n",
+        "--"
+      ],
+      "purge": [
+        "env",
+        "DEBIAN_FRONTEND=noninteractive",
+        "apt-get",
+        "-q",
+        "-y",
+        "purge",
+        "--"
+      ],
+      "remove": [
+        "env",
+        "DEBIAN_FRONTEND=noninteractive",
+        "apt-get",
+        "-q",
+        "-y",
+        "remove",
+        "--"
+      ],
+      "remove_impl": [
+        "env",
+        "DEBIAN_FRONTEND=noninteractive",
+        "dpkg",
+        "-r",
+        "--"
+      ],
+      "update_db": [
+        "apt-get",
+        "-q",
+        "-y",
+        "update"
+      ]
+    },
+    "pkgfile": {
+      "dep_query": [
+        "sh",
+        "-c",
+        "dpkg-deb -f -- \"$pkg\" \"Depends\" | sed -e \"s/ *, */,/g\" | tr \",\" \"\\n\""
+      ],
+      "install": [
+        "sh",
+        "-c",
+        "env DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --reinstall -y -o DPkg::Options::=--force-confnew -- $packages"
+      ]
+    }
+  },
+  "descr": "Ubuntu 26.04 LTS (Resolute Raccoon)",
+  "detect": {
+    "filename": "/etc/os-release",
+    "os_id": "ubuntu",
+    "os_version_regex": "^26\\.04$",
+    "regex": "^ Ubuntu \\s+ 26.04 \\s+ LTS"
+  },
+  "family": "debian",
+  "file_ext": "deb",
+  "initramfs_flavor": "update-initramfs",
+  "min_sys_python": "3.14",
+  "name": "UBUNTU2604",
+  "package": {
+    "BINDINGS_PYTHON": "python3",
+    "BINDINGS_PYTHON_CONFGET": "python3-confget",
+    "BINDINGS_PYTHON_SIMPLEJSON": "python3-simplejson",
+    "CGROUP": "cgroup-tools",
+    "CPUPOWER": "linux-tools-generic",
+    "LIBSSL": "libssl3",
+    "MCELOG": "bash"
+  },
+  "parent": "DEBIAN13",
+  "repo": {
+    "codename": "resolute",
     "keyring": "debian/repo/storpool-keyring.gpg",
     "req_packages": [
       "ca-certificates"
@@ -2574,6 +2809,7 @@ cmd_show_all()
     }
   },
   "order": [
+    "SLES16",
     "ROCKY8",
     "ROCKY9",
     "RHEL8",
@@ -2590,6 +2826,7 @@ cmd_show_all()
     "UBUNTU2004",
     "UBUNTU2204",
     "UBUNTU2404",
+    "UBUNTU2604",
     "DEBIAN10",
     "DEBIAN11",
     "DEBIAN12",
@@ -2651,6 +2888,9 @@ EOPROLOGUE
   printf -- '    "%s": ' 'ROCKY9'
   show_ROCKY9
   echo ','
+  printf -- '    "%s": ' 'SLES16'
+  show_SLES16
+  echo ','
   printf -- '    "%s": ' 'UBUNTU1804'
   show_UBUNTU1804
   echo ','
@@ -2662,11 +2902,14 @@ EOPROLOGUE
   echo ','
   printf -- '    "%s": ' 'UBUNTU2404'
   show_UBUNTU2404
+  echo ','
+  printf -- '    "%s": ' 'UBUNTU2604'
+  show_UBUNTU2604
   
 
 	cat <<'EOEPILOGUE'
   },
-  "version": "3.5.6"
+  "version": "3.5.7"
 }
 EOEPILOGUE
 }
@@ -2690,7 +2933,7 @@ EOPROLOGUE
 
 	cat <<'EOEPILOGUE'
   ,
-  "version": "3.5.6"
+  "version": "3.5.7"
 }
 EOEPILOGUE
 }
@@ -4303,6 +4546,87 @@ fi
 			esac
 			;;
 		
+		SLES16)
+			case "$cmd_cat" in
+				
+				package)
+					case "$cmd_item" in
+						
+						install)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'zypper' '-q' '--non-interactive' 'install' '--no-recommends' '--'  "$@"
+							;;
+						
+						list_all)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'zypper' 'packages' '--installed-only' '--'  "$@"
+							;;
+						
+						purge)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'zypper' '-q' '--non-interactive' 'remove' '--clean-deps' '--'  "$@"
+							;;
+						
+						remove)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'zypper' '-q' '--non-interactive' 'remove' '--'  "$@"
+							;;
+						
+						remove_impl)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'rpm' '-e' '--'  "$@"
+							;;
+						
+						update_db)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'zypper' 'refresh-services' '--with-repos'  "$@"
+							;;
+						
+
+						*)
+							echo "Invalid command '$cmd_item' in the '$cmd_cat' category" 1>&2
+							exit 1
+							;;
+					esac
+					;;
+				
+				pkgfile)
+					case "$cmd_item" in
+						
+						dep_query)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'sh' '-c' 'rpm -qpR -- "$pkg"'  "$@"
+							;;
+						
+						install)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'sh' 'zypper' '-q' '--non-interactive' 'install' '--no-recommends' '-- $packages'  "$@"
+							;;
+						
+
+						*)
+							echo "Invalid command '$cmd_item' in the '$cmd_cat' category" 1>&2
+							exit 1
+							;;
+					esac
+					;;
+				
+
+				*)
+					echo "Invalid command category '$cmd_cat'" 1>&2
+					exit 1
+					;;
+			esac
+			;;
+		
 		UBUNTU1804)
 			case "$cmd_cat" in
 				
@@ -4547,6 +4871,87 @@ fi
 			;;
 		
 		UBUNTU2404)
+			case "$cmd_cat" in
+				
+				package)
+					case "$cmd_item" in
+						
+						install)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'env' 'DEBIAN_FRONTEND=noninteractive' 'apt-get' '-q' '-y' '--no-install-recommends' 'install' '--'  "$@"
+							;;
+						
+						list_all)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'dpkg-query' '-W' '-f' '${Package}\t${Version}\t${Architecture}\t${db:Status-Abbrev}\n' '--'  "$@"
+							;;
+						
+						purge)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'env' 'DEBIAN_FRONTEND=noninteractive' 'apt-get' '-q' '-y' 'purge' '--'  "$@"
+							;;
+						
+						remove)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'env' 'DEBIAN_FRONTEND=noninteractive' 'apt-get' '-q' '-y' 'remove' '--'  "$@"
+							;;
+						
+						remove_impl)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'env' 'DEBIAN_FRONTEND=noninteractive' 'dpkg' '-r' '--'  "$@"
+							;;
+						
+						update_db)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'apt-get' '-q' '-y' 'update'  "$@"
+							;;
+						
+
+						*)
+							echo "Invalid command '$cmd_item' in the '$cmd_cat' category" 1>&2
+							exit 1
+							;;
+					esac
+					;;
+				
+				pkgfile)
+					case "$cmd_item" in
+						
+						dep_query)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'sh' '-c' 'dpkg-deb -f -- "$pkg" "Depends" | sed -e "s/ *, */,/g" | tr "," "\n"'  "$@"
+							;;
+						
+						install)
+							# The commands are quoted exactly as much as necessary.
+							# shellcheck disable=SC2016
+							$noop 'sh' '-c' 'env DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --reinstall -y -o DPkg::Options::=--force-confnew -- $packages'  "$@"
+							;;
+						
+
+						*)
+							echo "Invalid command '$cmd_item' in the '$cmd_cat' category" 1>&2
+							exit 1
+							;;
+					esac
+					;;
+				
+
+				*)
+					echo "Invalid command category '$cmd_cat'" 1>&2
+					exit 1
+					;;
+			esac
+			;;
+		
+		UBUNTU2604)
 			case "$cmd_cat" in
 				
 				package)
@@ -4710,6 +5115,30 @@ repo_add_yum()
 	yum --disablerepo='*' --enablerepo="storpool-$repotype" clean metadata
 }
 
+repo_add_suse()
+{
+	local name="$1" vdir="$2" repotype="$3" repodef="$4" keyring="$5"
+	local gpgdir='/usr/lib/rpm/gnupg/keys'
+
+	zypper -q --non-interactive install --no-recommends -- ca-certificates
+
+	local repobase repofile
+	repobase="$(basename -- "$repodef")"
+	repofile="$(repo_add_extension "$repobase" "$repotype")"
+	[ -n "$repofile" ]
+	copy_file "$vdir/$repofile" /etc/zypp/repos.d
+
+	local keybase
+	keybase="$(basename -- "$keyring")"
+	copy_file "$vdir/$keybase" "$gpgdir"
+
+	if [ -n "$(command -v rpmkeys || true)" ]; then
+		rpmkeys --import "$gpgdir/$(basename -- "$keybase")"
+	fi
+
+	zypper -q --non-interactive refresh "storpool-$repotype"
+}
+
 repo_add_deb()
 {
 	local name="$1" vdir="$2" repotype="$3" srcdef="$4" keyring="$5" packages="$6"
@@ -4870,6 +5299,12 @@ cmd_repo_add()
 			
 			;;
 		
+		SLES16)
+			
+			repo_add_suse 'SLES16' "$vdir" "$repotype" 'suse/repo/storpool.repo' 'suse/repo/storpool.asc'
+			
+			;;
+		
 		UBUNTU1804)
 			
 			repo_add_deb 'UBUNTU1804' "$vdir" "$repotype" 'debian/repo/storpool.sources' 'debian/repo/storpool-keyring.gpg' 'ca-certificates'
@@ -4891,6 +5326,12 @@ cmd_repo_add()
 		UBUNTU2404)
 			
 			repo_add_deb 'UBUNTU2404' "$vdir" "$repotype" 'debian/repo/storpool.sources' 'debian/repo/storpool-keyring.gpg' 'ca-certificates'
+			
+			;;
+		
+		UBUNTU2604)
+			
+			repo_add_deb 'UBUNTU2604' "$vdir" "$repotype" 'debian/repo/storpool.sources' 'debian/repo/storpool-keyring.gpg' 'ca-certificates'
 			
 			;;
 		
@@ -4945,7 +5386,7 @@ cmd_command()
 
 cmd_features()
 {
-	echo 'Features: format=1.4 version=3.5.6'
+	echo 'Features: format=1.4 version=3.5.7'
 }
 
 case "$1" in
@@ -5061,6 +5502,10 @@ case "$1" in
 				show_variant 'ROCKY9'
 				;;
 			
+			SLES16)
+				show_variant 'SLES16'
+				;;
+			
 			UBUNTU1804)
 				show_variant 'UBUNTU1804'
 				;;
@@ -5075,6 +5520,10 @@ case "$1" in
 			
 			UBUNTU2404)
 				show_variant 'UBUNTU2404'
+				;;
+			
+			UBUNTU2604)
+				show_variant 'UBUNTU2604'
 				;;
 			
 

@@ -15,7 +15,7 @@ use serde_derive::{Deserialize, Serialize};
 
 use crate::{
     Builder, DebRepo, Detect, Repo, Supported, Variant, VariantDefTop, VariantError, VariantFormat,
-    VariantFormatVersion, YumRepo,
+    VariantFormatVersion, YumRepo, SuseRepo
 };
 
 /// The supported StorPool build variants (OS distribution, version, etc).
@@ -126,6 +126,11 @@ pub fn get_variants() -> &'static VariantDefTop {
                                 repo: {%- if var.family == "redhat" %}
                                     Repo::Yum(YumRepo {
                                         yumdef: "{{ var.repo.yumdef }}".to_owned(),
+                                        keyring: "{{ var.repo.keyring }}".to_owned(),
+                                    }),
+                                    {% elif var.family == "suse" %}
+                                    Repo::Suse(SuseRepo {
+                                        repodef: "{{ var.repo.repodef }}".to_owned(),
                                         keyring: "{{ var.repo.keyring }}".to_owned(),
                                     }),
                                     {% elif var.family == "debian" %}

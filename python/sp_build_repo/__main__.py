@@ -215,7 +215,6 @@ def subst_yum_repo(
     rtype: defs.RepoType,
 ) -> None:
     """Substitute the placeholder vars in a Debian sources list file."""
-    assert isinstance(var.repo, defs.YumRepo)  # noqa: S101  # mypy needs this
     dst: Final = dstdir / (src.stem + rtype.extension + src.suffix)
     logging.debug("%(src)s -> %(dst)s []", {"src": src, "dst": dst})
 
@@ -289,6 +288,10 @@ def build_repo(cfg: Config) -> pathlib.Path:
         elif isinstance(var.repo, defs.YumRepo):
             for rtype in defs.REPO_TYPES:
                 subst_yum_repo(cfg, var, cfg.datadir / var.repo.yumdef, vardir, rtype)
+            copy_file(cfg.datadir / var.repo.keyring, vardir)
+        elif isinstance(var.repo, defs.SuseRepo):
+            for rtype in defs.REPO_TYPES:
+                subst_yum_repo(cfg, var, cfg.datadir / var.repo.repodef, vardir, rtype)
             copy_file(cfg.datadir / var.repo.keyring, vardir)
         else:
             raise NotImplementedError(

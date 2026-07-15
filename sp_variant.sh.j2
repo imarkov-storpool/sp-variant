@@ -265,6 +265,30 @@ repo_add_yum()
 	yum --disablerepo='*' --enablerepo="storpool-$repotype" clean metadata
 }
 
+repo_add_suse()
+{
+	local name="$1" vdir="$2" repotype="$3" repodef="$4" keyring="$5"
+	local gpgdir='/usr/lib/rpm/gnupg/keys'
+
+	zypper -q --non-interactive install --no-recommends -- ca-certificates
+
+	local repobase repofile
+	repobase="$(basename -- "$repodef")"
+	repofile="$(repo_add_extension "$repobase" "$repotype")"
+	[ -n "$repofile" ]
+	copy_file "$vdir/$repofile" /etc/zypp/repos.d
+
+	local keybase
+	keybase="$(basename -- "$keyring")"
+	copy_file "$vdir/$keybase" "$gpgdir"
+
+	if [ -n "$(command -v rpmkeys || true)" ]; then
+		rpmkeys --import "$gpgdir/$(basename -- "$keybase")"
+	fi
+
+	zypper -q --non-interactive refresh "storpool-$repotype"
+}
+
 repo_add_deb()
 {
 	local name="$1" vdir="$2" repotype="$3" srcdef="$4" keyring="$5" packages="$6"
@@ -326,8 +350,10 @@ cmd_repo_add()
 		{{ name }})
 			{% if var.family == "debian" %}
 			repo_add_deb '{{ name }}' "$vdir" "$repotype" '{{ var.repo.sources }}' '{{ var.repo.keyring }}' '{{ var.repo.req_packages|join(" ") }}'
-			{% else %}
+			{% elif var.family == "redhat" %}
 			repo_add_yum '{{ name }}' "$vdir" "$repotype" '{{ var.repo.yumdef }}' '{{ var.repo.keyring }}'
+			{% elif var.family == "suse" %}
+			repo_add_suse '{{ name }}' "$vdir" "$repotype" '{{ var.repo.repodef }}' '{{ var.repo.keyring }}'
 			{% endif %}
 			;;
 		{% endfor %}
