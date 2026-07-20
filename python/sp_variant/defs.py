@@ -102,7 +102,7 @@ class YumRepo(NamedTuple):
 
 
 class SuseRepo(NamedTuple):
-    """Suse Yum/DNF package repository data."""
+    """SUSE Yum/DNF package repository data."""
 
     repodef: str
     """The *.repo file to copy to /etc/zypp/repos.d/."""
@@ -225,7 +225,7 @@ class RepoType(NamedTuple):
     """The name of the StorPool package repository."""
 
     extension: str
-    """The extension to be used in filenames for configurating the package manager."""
+    """The extension to be used in filenames for configuring the package manager."""
 
     url: str
     """The base URL of the StorPool package repository."""
