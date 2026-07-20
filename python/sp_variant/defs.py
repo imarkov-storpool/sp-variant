@@ -95,7 +95,7 @@ class YumRepo(NamedTuple):
     """Yum/DNF package repository data."""
 
     yumdef: str
-    """The *.repo file to copy to /etc/yum.repos.d/."""
+    """The .repo file to copy to /etc/yum.repos.d/."""
 
     keyring: str
     """The keyring file to copy to /etc/pki/rpm-gpg/."""
@@ -105,7 +105,7 @@ class SuseRepo(NamedTuple):
     """SUSE Yum/DNF package repository data."""
 
     repodef: str
-    """The *.repo file to copy to /etc/zypp/repos.d/."""
+    """The .repo file to copy to /etc/zypp/repos.d/."""
 
     keyring: str
     """The keyring file to copy to /usr/lib/rpm/gnupg/keys/."""
